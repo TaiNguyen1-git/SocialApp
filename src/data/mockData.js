@@ -1,17 +1,16 @@
-// Mock data for the app
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Keys for AsyncStorage
+// Các khóa để lưu trữ dữ liệu trong AsyncStorage
 const USERS_KEY = '@SocialApp:users';
 const CURRENT_USER_KEY = '@SocialApp:currentUser';
 const POSTS_KEY = '@SocialApp:posts';
 
-// Sample users
+// Dữ liệu mẫu cho người dùng
 const sampleUsers = [
   {
     id: '1',
     email: 'john@example.com',
-    password: 'password123', // In a real app, passwords would be hashed
+    password: 'password123', // Trong ứng dụng thực tế, mật khẩu nên được mã hóa
     displayName: 'John Doe',
     avatarUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
     createdAt: new Date(2023, 0, 15).toISOString()
@@ -50,7 +49,7 @@ const sampleUsers = [
   }
 ];
 
-// Sample posts
+// Dữ liệu mẫu cho bài đăng
 const samplePosts = [
   {
     id: '1',
@@ -169,65 +168,30 @@ const samplePosts = [
       }
     ],
     createdAt: new Date(2023, 5, 14, 18, 30).toISOString()
-  },
-  {
-    id: '6',
-    userId: '1',
-    displayName: 'John Doe',
-    text: 'Visited the Grand Canyon today. The view is breathtaking! #travel #grandcanyon #nature',
-    imageUrl: 'https://source.unsplash.com/random/800x600/?grandcanyon',
-    likes: ['2', '3', '4', '5'],
-    comments: [],
-    createdAt: new Date(2023, 5, 15, 10, 0).toISOString()
-  },
-  {
-    id: '7',
-    userId: '2',
-    displayName: 'Jane Smith',
-    text: 'Just got promoted at work! 🎉 #career #celebration',
-    imageUrl: null,
-    likes: ['1', '3', '4', '5'],
-    comments: [
-      {
-        id: '701',
-        userId: '5',
-        displayName: 'Demo User',
-        text: 'Congratulations! Well deserved!',
-        createdAt: new Date(2023, 5, 16, 14, 15).toISOString()
-      },
-      {
-        id: '702',
-        userId: '3',
-        displayName: 'Bob Johnson',
-        text: 'That\'s awesome news! Congrats!',
-        createdAt: new Date(2023, 5, 16, 15, 30).toISOString()
-      }
-    ],
-    createdAt: new Date(2023, 5, 16, 13, 0).toISOString()
   }
 ];
 
-// Function to initialize mock data
+// Hàm khởi tạo dữ liệu mẫu
 export const initializeMockData = async () => {
   try {
-    // Check if data already exists
+    // Kiểm tra xem dữ liệu đã tồn tại chưa
     const usersJson = await AsyncStorage.getItem(USERS_KEY);
     const postsJson = await AsyncStorage.getItem(POSTS_KEY);
     
-    // Only initialize if no data exists
+    // Chỉ khởi tạo nếu dữ liệu chưa tồn tại
     if (!usersJson) {
       await AsyncStorage.setItem(USERS_KEY, JSON.stringify(sampleUsers));
-      console.log('Mock users initialized');
+      console.log('Đã khởi tạo dữ liệu người dùng mẫu');
     }
     
     if (!postsJson) {
       await AsyncStorage.setItem(POSTS_KEY, JSON.stringify(samplePosts));
-      console.log('Mock posts initialized');
+      console.log('Đã khởi tạo dữ liệu bài đăng mẫu');
     }
     
     return true;
   } catch (error) {
-    console.error('Error initializing mock data:', error);
+    console.error('Lỗi khi khởi tạo dữ liệu mẫu:', error);
     return false;
   }
 };

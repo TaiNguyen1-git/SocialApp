@@ -1,37 +1,43 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Keys for AsyncStorage
+// Các khóa để lưu trữ dữ liệu trong AsyncStorage
 const USERS_KEY = '@SocialApp:users';
 const CURRENT_USER_KEY = '@SocialApp:currentUser';
 const POSTS_KEY = '@SocialApp:posts';
 
-// User functions
+/**
+ * Đăng ký người dùng mới
+ * @param {string} email - Email người dùng
+ * @param {string} password - Mật khẩu người dùng
+ * @param {string} displayName - Tên hiển thị
+ * @returns {Object} Thông tin người dùng đã đăng ký (không bao gồm mật khẩu)
+ */
 export const registerUser = async (email, password, displayName) => {
   try {
-    // Get existing users
+    // Lấy danh sách người dùng hiện có
     const usersJson = await AsyncStorage.getItem(USERS_KEY);
     const users = usersJson ? JSON.parse(usersJson) : [];
     
-    // Check if email already exists
+    // Kiểm tra xem email đã tồn tại chưa
     const existingUser = users.find(user => user.email === email);
     if (existingUser) {
-      throw new Error('Email already in use');
+      throw new Error('Email đã được sử dụng');
     }
     
-    // Create new user
+    // Tạo người dùng mới
     const newUser = {
       id: Date.now().toString(),
       email,
-      password, // In a real app, you would hash this password
+      password, // Trong ứng dụng thực tế, mật khẩu nên được mã hóa
       displayName,
       createdAt: new Date().toISOString()
     };
     
-    // Save user
+    // Lưu người dùng mới vào danh sách
     users.push(newUser);
     await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
     
-    // Return user without password
+    // Trả về thông tin người dùng không bao gồm mật khẩu
     const { password: _, ...userWithoutPassword } = newUser;
     return userWithoutPassword;
   } catch (error) {
@@ -39,24 +45,30 @@ export const registerUser = async (email, password, displayName) => {
   }
 };
 
+/**
+ * Đăng nhập người dùng
+ * @param {string} email - Email người dùng
+ * @param {string} password - Mật khẩu người dùng
+ * @returns {Object} Thông tin người dùng đã đăng nhập (không bao gồm mật khẩu)
+ */
 export const loginUser = async (email, password) => {
   try {
-    // Get existing users
+    // Lấy danh sách người dùng
     const usersJson = await AsyncStorage.getItem(USERS_KEY);
     const users = usersJson ? JSON.parse(usersJson) : [];
     
-    // Find user by email
+    // Tìm người dùng theo email
     const user = users.find(user => user.email === email);
     if (!user) {
-      throw new Error('User not found');
+      throw new Error('Không tìm thấy người dùng');
     }
     
-    // Check password
+    // Kiểm tra mật khẩu
     if (user.password !== password) {
-      throw new Error('Incorrect password');
+      throw new Error('Mật khẩu không chính xác');
     }
     
-    // Save current user
+    // Lưu thông tin người dùng hiện tại (không bao gồm mật khẩu)
     const { password: _, ...userWithoutPassword } = user;
     await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(userWithoutPassword));
     
@@ -66,14 +78,22 @@ export const loginUser = async (email, password) => {
   }
 };
 
+/**
+ * Đăng xuất người dùng hiện tại
+ */
 export const logoutUser = async () => {
   try {
+    // Xóa thông tin người dùng hiện tại khỏi AsyncStorage
     await AsyncStorage.removeItem(CURRENT_USER_KEY);
   } catch (error) {
     throw error;
   }
 };
 
+/**
+ * Lấy thông tin người dùng hiện tại
+ * @returns {Object|null} Thông tin người dùng hiện tại hoặc null nếu chưa đăng nhập
+ */
 export const getCurrentUser = async () => {
   try {
     const userJson = await AsyncStorage.getItem(CURRENT_USER_KEY);
@@ -83,13 +103,18 @@ export const getCurrentUser = async () => {
   }
 };
 
+/**
+ * Cập nhật ảnh đại diện của người dùng
+ * @param {string} userId - ID của người dùng
+ * @param {string} avatarUrl - URL của ảnh đại diện mới
+ */
 export const updateUserAvatar = async (userId, avatarUrl) => {
   try {
-    // Get existing users
+    // Lấy danh sách người dùng
     const usersJson = await AsyncStorage.getItem(USERS_KEY);
     const users = usersJson ? JSON.parse(usersJson) : [];
     
-    // Find and update user
+    // Cập nhật ảnh đại diện cho người dùng
     const updatedUsers = users.map(user => {
       if (user.id === userId) {
         return { ...user, avatarUrl };
@@ -97,10 +122,10 @@ export const updateUserAvatar = async (userId, avatarUrl) => {
       return user;
     });
     
-    // Save updated users
+    // Lưu danh sách người dùng đã cập nhật
     await AsyncStorage.setItem(USERS_KEY, JSON.stringify(updatedUsers));
     
-    // Update current user if it's the same user
+    // Cập nhật thông tin người dùng hiện tại nếu cần
     const currentUserJson = await AsyncStorage.getItem(CURRENT_USER_KEY);
     if (currentUserJson) {
       const currentUser = JSON.parse(currentUserJson);
@@ -114,14 +139,21 @@ export const updateUserAvatar = async (userId, avatarUrl) => {
   }
 };
 
-// Post functions
+/**
+ * Tạo bài đăng mới
+ * @param {string} userId - ID của người dùng tạo bài đăng
+ * @param {string} displayName - Tên hiển thị của người dùng
+ * @param {string} text - Nội dung bài đăng
+ * @param {string|null} imageUrl - URL của hình ảnh (nếu có)
+ * @returns {string} ID của bài đăng mới
+ */
 export const createPost = async (userId, displayName, text, imageUrl) => {
   try {
-    // Get existing posts
+    // Lấy danh sách bài đăng hiện có
     const postsJson = await AsyncStorage.getItem(POSTS_KEY);
     const posts = postsJson ? JSON.parse(postsJson) : [];
     
-    // Create new post
+    // Tạo bài đăng mới
     const newPost = {
       id: Date.now().toString(),
       userId,
@@ -133,7 +165,7 @@ export const createPost = async (userId, displayName, text, imageUrl) => {
       createdAt: new Date().toISOString()
     };
     
-    // Save post
+    // Lưu bài đăng mới vào danh sách
     posts.push(newPost);
     await AsyncStorage.setItem(POSTS_KEY, JSON.stringify(posts));
     
@@ -143,28 +175,37 @@ export const createPost = async (userId, displayName, text, imageUrl) => {
   }
 };
 
+/**
+ * Lấy danh sách tất cả bài đăng
+ * @returns {Array} Danh sách bài đăng đã sắp xếp theo thời gian (mới nhất trước)
+ */
 export const getPosts = async () => {
   try {
     const postsJson = await AsyncStorage.getItem(POSTS_KEY);
     const posts = postsJson ? JSON.parse(postsJson) : [];
     
-    // Sort by createdAt in descending order
+    // Sắp xếp bài đăng theo thời gian tạo (mới nhất trước)
     return posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   } catch (error) {
     throw error;
   }
 };
 
+/**
+ * Thích một bài đăng
+ * @param {string} postId - ID của bài đăng
+ * @param {string} userId - ID của người dùng thích bài đăng
+ */
 export const likePost = async (postId, userId) => {
   try {
-    // Get existing posts
+    // Lấy danh sách bài đăng
     const postsJson = await AsyncStorage.getItem(POSTS_KEY);
     const posts = postsJson ? JSON.parse(postsJson) : [];
     
-    // Find and update post
+    // Cập nhật lượt thích cho bài đăng
     const updatedPosts = posts.map(post => {
       if (post.id === postId) {
-        // Add userId to likes if not already there
+        // Thêm userId vào danh sách likes nếu chưa có
         if (!post.likes.includes(userId)) {
           return { ...post, likes: [...post.likes, userId] };
         }
@@ -172,45 +213,57 @@ export const likePost = async (postId, userId) => {
       return post;
     });
     
-    // Save updated posts
+    // Lưu danh sách bài đăng đã cập nhật
     await AsyncStorage.setItem(POSTS_KEY, JSON.stringify(updatedPosts));
   } catch (error) {
     throw error;
   }
 };
 
+/**
+ * Bỏ thích một bài đăng
+ * @param {string} postId - ID của bài đăng
+ * @param {string} userId - ID của người dùng bỏ thích bài đăng
+ */
 export const unlikePost = async (postId, userId) => {
   try {
-    // Get existing posts
+    // Lấy danh sách bài đăng
     const postsJson = await AsyncStorage.getItem(POSTS_KEY);
     const posts = postsJson ? JSON.parse(postsJson) : [];
     
-    // Find and update post
+    // Cập nhật lượt thích cho bài đăng
     const updatedPosts = posts.map(post => {
       if (post.id === postId) {
-        // Remove userId from likes
+        // Xóa userId khỏi danh sách likes
         return { ...post, likes: post.likes.filter(id => id !== userId) };
       }
       return post;
     });
     
-    // Save updated posts
+    // Lưu danh sách bài đăng đã cập nhật
     await AsyncStorage.setItem(POSTS_KEY, JSON.stringify(updatedPosts));
   } catch (error) {
     throw error;
   }
 };
 
+/**
+ * Thêm bình luận vào bài đăng
+ * @param {string} postId - ID của bài đăng
+ * @param {string} userId - ID của người dùng bình luận
+ * @param {string} displayName - Tên hiển thị của người dùng
+ * @param {string} text - Nội dung bình luận
+ */
 export const addComment = async (postId, userId, displayName, text) => {
   try {
-    // Get existing posts
+    // Lấy danh sách bài đăng
     const postsJson = await AsyncStorage.getItem(POSTS_KEY);
     const posts = postsJson ? JSON.parse(postsJson) : [];
     
-    // Find and update post
+    // Cập nhật bình luận cho bài đăng
     const updatedPosts = posts.map(post => {
       if (post.id === postId) {
-        // Add comment
+        // Tạo bình luận mới
         const newComment = {
           id: Date.now().toString(),
           userId,
@@ -218,12 +271,13 @@ export const addComment = async (postId, userId, displayName, text) => {
           text,
           createdAt: new Date().toISOString()
         };
+        // Thêm bình luận vào danh sách
         return { ...post, comments: [...post.comments, newComment] };
       }
       return post;
     });
     
-    // Save updated posts
+    // Lưu danh sách bài đăng đã cập nhật
     await AsyncStorage.setItem(POSTS_KEY, JSON.stringify(updatedPosts));
   } catch (error) {
     throw error;

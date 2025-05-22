@@ -2,20 +2,21 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Define themes
+// Định nghĩa chủ đề sáng
 export const lightTheme = {
   mode: 'light',
-  background: '#FFFFFF',
-  text: '#000000',
-  primary: '#6200EE',
-  secondary: '#03DAC6',
-  accent: '#FF4081',
-  error: '#B00020',
-  border: '#E0E0E0',
-  card: '#F5F5F5',
-  placeholder: '#9E9E9E',
+  background: '#FFFFFF', // Màu nền
+  text: '#000000', // Màu chữ
+  primary: '#6200EE', // Màu chính
+  secondary: '#03DAC6', // Màu phụ
+  accent: '#FF4081', // Màu nhấn
+  error: '#B00020', // Màu lỗi
+  border: '#E0E0E0', // Màu viền
+  card: '#F5F5F5', // Màu thẻ
+  placeholder: '#9E9E9E', // Màu placeholder
 };
 
+// Định nghĩa chủ đề tối
 export const darkTheme = {
   mode: 'dark',
   background: '#121212',
@@ -29,48 +30,51 @@ export const darkTheme = {
   placeholder: '#757575',
 };
 
-// Create context
+// Tạo context để quản lý chủ đề
 export const ThemeContext = createContext();
 
-// Context provider
 export const ThemeProvider = ({ children }) => {
+  // Lấy chủ đề từ thiết bị
   const deviceTheme = useColorScheme();
+  // State để lưu trữ chủ đề hiện tại
   const [theme, setTheme] = useState(deviceTheme === 'dark' ? darkTheme : lightTheme);
-  const [themeMode, setThemeMode] = useState('system'); // 'system', 'light', or 'dark'
+  // State để lưu trữ chế độ chủ đề ('system', 'light', hoặc 'dark')
+  const [themeMode, setThemeMode] = useState('system');
 
+  // Tải tùy chọn chủ đề đã lưu
   useEffect(() => {
-    // Load saved theme preference
     const loadThemePreference = async () => {
       try {
         const savedThemeMode = await AsyncStorage.getItem('@SocialApp:themeMode');
         if (savedThemeMode) {
           setThemeMode(savedThemeMode);
 
+          // Áp dụng chủ đề dựa trên chế độ đã lưu
           if (savedThemeMode === 'light') {
             setTheme(lightTheme);
           } else if (savedThemeMode === 'dark') {
             setTheme(darkTheme);
           } else {
-            // System default
+            // Sử dụng chủ đề hệ thống
             setTheme(deviceTheme === 'dark' ? darkTheme : lightTheme);
           }
         }
       } catch (error) {
-        console.error('Error loading theme preference:', error);
+        console.error('Lỗi khi tải tùy chọn chủ đề:', error);
       }
     };
 
     loadThemePreference();
   }, [deviceTheme]);
 
-  // Update theme when device theme changes
+  // Cập nhật chủ đề khi chủ đề thiết bị thay đổi
   useEffect(() => {
     if (themeMode === 'system') {
       setTheme(deviceTheme === 'dark' ? darkTheme : lightTheme);
     }
   }, [deviceTheme, themeMode]);
 
-  // Toggle between light and dark themes
+  // Chuyển đổi giữa chủ đề sáng và tối
   const toggleTheme = async () => {
     try {
       const newThemeMode = theme.mode === 'light' ? 'dark' : 'light';
@@ -79,32 +83,36 @@ export const ThemeProvider = ({ children }) => {
       setTheme(newTheme);
       setThemeMode(newThemeMode);
 
+      // Lưu tùy chọn chủ đề
       await AsyncStorage.setItem('@SocialApp:themeMode', newThemeMode);
     } catch (error) {
-      console.error('Error saving theme preference:', error);
+      console.error('Lỗi khi lưu tùy chọn chủ đề:', error);
     }
   };
 
-  // Set specific theme
+  // Đặt chế độ chủ đề cụ thể
   const changeThemeMode = async (mode) => {
     try {
       setThemeMode(mode);
 
+      // Áp dụng chủ đề dựa trên chế độ
       if (mode === 'light') {
         setTheme(lightTheme);
       } else if (mode === 'dark') {
         setTheme(darkTheme);
       } else {
-        // System default
+        // Sử dụng chủ đề hệ thống
         setTheme(deviceTheme === 'dark' ? darkTheme : lightTheme);
       }
 
+      // Lưu tùy chọn chủ đề
       await AsyncStorage.setItem('@SocialApp:themeMode', mode);
     } catch (error) {
-      console.error('Error saving theme preference:', error);
+      console.error('Lỗi khi lưu tùy chọn chủ đề:', error);
     }
   };
 
+  // Cung cấp các giá trị và hàm cho context
   return (
     <ThemeContext.Provider
       value={{
@@ -120,11 +128,11 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use the theme context
+// Hook tùy chỉnh để sử dụng ThemeContext
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    throw new Error('useTheme phải được sử dụng trong ThemeProvider');
   }
   return context;
 };

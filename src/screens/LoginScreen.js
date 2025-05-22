@@ -14,54 +14,63 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../utils/AuthContext';
 import { useTheme } from '../utils/ThemeContext';
 
+/**
+ * Màn hình đăng nhập
+ */
 const LoginScreen = ({ navigation }) => {
+  // State để lưu trữ thông tin đăng nhập
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Lấy hàm đăng nhập từ AuthContext
   const { login } = useAuth();
+  // Lấy chủ đề hiện tại từ ThemeContext
   const { theme } = useTheme();
 
+  /**
+   * Xử lý đăng nhập
+   */
   const handleLogin = async () => {
-    // Validate inputs
+    // Kiểm tra các trường đã được nhập đầy đủ chưa
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin');
       return;
     }
 
-    // Email validation
+    // Kiểm tra định dạng email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      Alert.alert('Lỗi', 'Vui lòng nhập đúng định dạng email');
       return;
     }
 
     setLoading(true);
 
     try {
+      // Gọi hàm đăng nhập từ AuthContext
       await login(email, password);
-      // Navigation is handled by the AuthContext
+      // Việc điều hướng sẽ được xử lý bởi AuthContext
     } catch (error) {
-      let errorMessage = 'An error occurred during login';
+      // Xử lý các lỗi đăng nhập
+      let errorMessage = 'Đã xảy ra lỗi trong quá trình đăng nhập';
 
-      if (error.message.includes('user-not-found') || error.message.includes('User not found')) {
-        errorMessage = 'User not found. Please check your email or register a new account.';
-      } else if (error.message.includes('wrong-password') || error.message.includes('Incorrect password')) {
-        errorMessage = 'Incorrect password. Please try again.';
+      if (error.message.includes('user-not-found') || error.message.includes('User not found') || error.message.includes('Không tìm thấy người dùng')) {
+        errorMessage = 'Không tìm thấy người dùng. Vui lòng kiểm tra email hoặc đăng ký tài khoản mới.';
+      } else if (error.message.includes('wrong-password') || error.message.includes('Incorrect password') || error.message.includes('Mật khẩu không chính xác')) {
+        errorMessage = 'Mật khẩu không chính xác. Vui lòng thử lại.';
       } else if (error.message.includes('invalid-email')) {
-        errorMessage = 'Invalid email format.';
+        errorMessage = 'Định dạng email không hợp lệ.';
       } else if (error.message.includes('too-many-requests')) {
-        errorMessage = 'Too many failed login attempts. Please try again later.';
+        errorMessage = 'Quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau.';
       }
 
-      Alert.alert('Login Failed', errorMessage);
+      Alert.alert('Đăng nhập thất bại', errorMessage);
     } finally {
       setLoading(false);
     }
   };
-
-
 
   return (
     <KeyboardAvoidingView
@@ -69,12 +78,15 @@ const LoginScreen = ({ navigation }) => {
       style={[styles.container, { backgroundColor: theme.background }]}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Phần tiêu đề */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.text }]}>Social App</Text>
-          <Text style={[styles.subtitle, { color: theme.placeholder }]}>Connect with friends and share moments</Text>
+          <Text style={[styles.subtitle, { color: theme.placeholder }]}>Kết nối với bạn bè và chia sẻ khoảnh khắc</Text>
         </View>
 
+        {/* Form đăng nhập */}
         <View style={styles.form}>
+          {/* Trường nhập email */}
           <View style={[styles.inputContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Ionicons name="mail-outline" size={20} color={theme.placeholder} style={styles.inputIcon} />
             <TextInput
@@ -88,16 +100,18 @@ const LoginScreen = ({ navigation }) => {
             />
           </View>
 
+          {/* Trường nhập mật khẩu */}
           <View style={[styles.inputContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Ionicons name="lock-closed-outline" size={20} color={theme.placeholder} style={styles.inputIcon} />
             <TextInput
               style={[styles.input, { color: theme.text }]}
-              placeholder="Password"
+              placeholder="Mật khẩu"
               placeholderTextColor={theme.placeholder}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
             />
+            {/* Nút hiển thị/ẩn mật khẩu */}
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.passwordToggle}>
               <Ionicons
                 name={showPassword ? "eye-off-outline" : "eye-outline"}
@@ -107,23 +121,25 @@ const LoginScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
+          {/* Nút đăng nhập */}
           <TouchableOpacity
             style={[styles.button, { backgroundColor: theme.primary }]}
             onPress={handleLogin}
             disabled={loading}
           >
             <Text style={styles.buttonText}>
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </Text>
           </TouchableOpacity>
           
+          {/* Phần footer */}
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: theme.placeholder }]}>
-              Don't have an account?
+              Chưa có tài khoản?
             </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
               <Text style={[styles.footerLink, { color: theme.primary }]}>
-                Register
+                Đăng ký
               </Text>
             </TouchableOpacity>
           </View>
@@ -133,6 +149,7 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
+// Định nghĩa styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -187,15 +204,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-
-  demoAccount: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  demoText: {
-    fontSize: 14,
-    fontStyle: 'italic',
   },
   footer: {
     flexDirection: 'row',

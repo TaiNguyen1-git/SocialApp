@@ -4,7 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
-// Import screens
+// Import các màn hình
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -13,15 +13,17 @@ import CreatePostScreen from '../screens/CreatePostScreen';
 import PostDetailScreen from '../screens/PostDetailScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
-// Import context
+// Import các context
 import { useAuth } from '../utils/AuthContext';
 import { useTheme } from '../utils/ThemeContext';
 
-// Create navigators
+// Tạo các navigator
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Auth Navigator (Login/Register)
+/**
+ * Navigator cho phần xác thực (đăng nhập/đăng ký)
+ */
 const AuthNavigator = () => {
   const { theme } = useTheme();
 
@@ -43,13 +45,16 @@ const AuthNavigator = () => {
   );
 };
 
-// Main Tab Navigator
+/**
+ * Navigator cho thanh tab chính
+ */
 const MainTabNavigator = () => {
   const { theme } = useTheme();
 
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        // Cấu hình biểu tượng cho từng tab
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
@@ -65,12 +70,14 @@ const MainTabNavigator = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
+        // Cấu hình màu sắc và kiểu dáng cho thanh tab
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.placeholder,
         tabBarStyle: {
           backgroundColor: theme.background,
           borderTopColor: theme.border,
         },
+        // Cấu hình tiêu đề
         headerStyle: {
           backgroundColor: theme.primary,
         },
@@ -88,7 +95,9 @@ const MainTabNavigator = () => {
   );
 };
 
-// Main Stack Navigator (includes tabs and other screens)
+/**
+ * Navigator chính bao gồm tabs và các màn hình khác
+ */
 const MainStackNavigator = () => {
   const { theme } = useTheme();
 
@@ -114,17 +123,22 @@ const MainStackNavigator = () => {
   );
 };
 
-// Root Navigator
+/**
+ * Navigator gốc của ứng dụng
+ * Quyết định hiển thị phần xác thực hoặc phần chính dựa vào trạng thái đăng nhập
+ */
 const AppNavigator = () => {
   const { user, loading } = useAuth();
   const { theme } = useTheme();
 
+  // Hiển thị màn hình trống trong khi đang tải
   if (loading) {
-    return null; // Or a loading screen
+    return null;
   }
 
   return (
     <NavigationContainer
+      // Cấu hình chủ đề cho navigation
       theme={{
         dark: theme.mode === 'dark',
         colors: {
@@ -159,6 +173,7 @@ const AppNavigator = () => {
         },
       }}
     >
+      {/* Hiển thị MainStackNavigator nếu đã đăng nhập, ngược lại hiển thị AuthNavigator */}
       {user ? <MainStackNavigator /> : <AuthNavigator />}
     </NavigationContainer>
   );

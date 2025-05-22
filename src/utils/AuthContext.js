@@ -1,27 +1,29 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Keys for AsyncStorage
+// Các khóa để lưu trữ dữ liệu trong AsyncStorage
 const USERS_KEY = '@SocialApp:users';
 const CURRENT_USER_KEY = '@SocialApp:currentUser';
 
-// Create context
+// Tạo context để quản lý trạng thái xác thực
 export const AuthContext = createContext();
 
-// Context provider
 export const AuthProvider = ({ children }) => {
+  // State để lưu trữ thông tin người dùng hiện tại
   const [user, setUser] = useState(null);
+  // State để theo dõi trạng thái đang tải
   const [loading, setLoading] = useState(true);
 
+  // Kiểm tra xem người dùng đã đăng nhập chưa khi ứng dụng khởi động
   useEffect(() => {
-    // Check AsyncStorage for user
     const loadUser = async () => {
       try {
+        // Lấy thông tin người dùng từ AsyncStorage
         const userJson = await AsyncStorage.getItem(CURRENT_USER_KEY);
         const currentUser = userJson ? JSON.parse(userJson) : null;
         setUser(currentUser);
       } catch (error) {
-        console.error('Error getting current user from AsyncStorage:', error);
+        console.error('Lỗi khi lấy thông tin người dùng từ AsyncStorage:', error);
       } finally {
         setLoading(false);
       }
@@ -30,38 +32,37 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  // Register user
+  // Hàm đăng ký người dùng mới
   const register = async (email, password, displayName) => {
     try {
-      // Get existing users
+      // Lấy danh sách người dùng hiện có
       const usersJson = await AsyncStorage.getItem(USERS_KEY);
       const users = usersJson ? JSON.parse(usersJson) : [];
 
-      // Check if email already exists
+      // Kiểm tra xem email đã tồn tại chưa
       const existingUser = users.find(user => user.email === email);
       if (existingUser) {
-        throw new Error('Email already in use');
+        throw new Error('Email đã được sử dụng');
       }
 
-      // Create new user
+      // Tạo người dùng mới
       const newUser = {
         id: Date.now().toString(),
         email,
-        password, // In a real app, you would hash this password
+        password, // Trong ứng dụng thực tế, mật khẩu nên được mã hóa
         displayName,
         createdAt: new Date().toISOString()
       };
 
-      // Save user
+      // Lưu người dùng mới vào danh sách
       users.push(newUser);
       await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
 
-      // Return user without password
+      // Loại bỏ mật khẩu trước khi lưu vào state và AsyncStorage
       const { password: _, ...userWithoutPassword } = newUser;
-
-      // Save current user
       await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(userWithoutPassword));
 
+      // Cập nhật state
       setUser(userWithoutPassword);
       return userWithoutPassword;
     } catch (error) {
@@ -69,28 +70,29 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Login user
+  // Hàm đăng nhập
   const login = async (email, password) => {
     try {
-      // Get existing users
+      // Lấy danh sách người dùng
       const usersJson = await AsyncStorage.getItem(USERS_KEY);
       const users = usersJson ? JSON.parse(usersJson) : [];
 
-      // Find user by email
+      // Tìm người dùng theo email
       const user = users.find(user => user.email === email);
       if (!user) {
-        throw new Error('User not found');
+        throw new Error('Không tìm thấy người dùng');
       }
 
-      // Check password
+      // Kiểm tra mật khẩu
       if (user.password !== password) {
-        throw new Error('Incorrect password');
+        throw new Error('Mật khẩu không chính xác');
       }
 
-      // Save current user
+      // Loại bỏ mật khẩu trước khi lưu vào state và AsyncStorage
       const { password: _, ...userWithoutPassword } = user;
       await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(userWithoutPassword));
 
+      // Cập nhật state
       setUser(userWithoutPassword);
       return userWithoutPassword;
     } catch (error) {
@@ -98,25 +100,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout user
+  // Hàm đăng xuất
   const logout = async () => {
     try {
+      // Xóa thông tin người dùng hiện tại khỏi AsyncStorage
       await AsyncStorage.removeItem(CURRENT_USER_KEY);
+      // Đặt lại state người dùng
       setUser(null);
     } catch (error) {
       throw error;
     }
   };
 
-  // Update user avatar
+  // Hàm cập nhật ảnh đại diện
   const updateAvatar = async (avatarUrl) => {
     try {
       if (user) {
-        // Get existing users
+        // Lấy danh sách người dùng
         const usersJson = await AsyncStorage.getItem(USERS_KEY);
         const users = usersJson ? JSON.parse(usersJson) : [];
 
-        // Find and update user
+        // Cập nhật ảnh đại diện cho người dùng hiện tại
         const updatedUsers = users.map(u => {
           if (u.id === user.id) {
             return { ...u, avatarUrl };
@@ -124,13 +128,14 @@ export const AuthProvider = ({ children }) => {
           return u;
         });
 
-        // Save updated users
+        // Lưu danh sách người dùng đã cập nhật
         await AsyncStorage.setItem(USERS_KEY, JSON.stringify(updatedUsers));
 
-        // Update current user
+        // Cập nhật thông tin người dùng hiện tại
         const updatedUser = { ...user, avatarUrl };
         await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
 
+        // Cập nhật state
         setUser(updatedUser);
       }
     } catch (error) {
@@ -138,6 +143,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Cung cấp các giá trị và hàm cho context
   return (
     <AuthContext.Provider
       value={{
@@ -154,11 +160,11 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use the auth context
+// Hook tùy chỉnh để sử dụng AuthContext
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth phải được sử dụng trong AuthProvider');
   }
   return context;
 };
