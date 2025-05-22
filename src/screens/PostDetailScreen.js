@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  Image, 
-  TouchableOpacity, 
-  TextInput, 
-  FlatList, 
-  KeyboardAvoidingView, 
+import {
+  StyleSheet,
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  TextInput,
+  FlatList,
+  KeyboardAvoidingView,
   Platform,
   Alert,
   ActivityIndicator
@@ -16,7 +16,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../utils/AuthContext';
 import { useTheme } from '../utils/ThemeContext';
 import * as LocalStorage from '../services/localStorage';
-import * as Firebase from '../services/firebase';
 import { Vibration } from 'react-native';
 
 // Comment component
@@ -26,7 +25,7 @@ const Comment = ({ comment, theme }) => {
     const date = new Date(dateString);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
-  
+
   return (
     <View style={[styles.commentContainer, { borderColor: theme.border }]}>
       <View style={styles.commentHeader}>
@@ -49,36 +48,31 @@ const Comment = ({ comment, theme }) => {
 
 const PostDetailScreen = ({ route, navigation }) => {
   const { post: initialPost } = route.params;
-  
+
   const [post, setPost] = useState(initialPost);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  
-  const { user, useFirebase } = useAuth();
+
+  const { user } = useAuth();
   const { theme } = useTheme();
-  
+
   // Check if post is liked by current user
   const isLiked = post.likes && post.likes.includes(user?.id);
-  
+
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
-  
+
   // Fetch updated post
   const fetchPost = async () => {
     try {
       setRefreshing(true);
-      
-      let posts;
-      if (useFirebase) {
-        posts = await Firebase.getPosts();
-      } else {
-        posts = await LocalStorage.getPosts();
-      }
-      
+
+      const posts = await LocalStorage.getPosts();
+
       const updatedPost = posts.find(p => p.id === post.id);
       if (updatedPost) {
         setPost(updatedPost);
@@ -89,40 +83,32 @@ const PostDetailScreen = ({ route, navigation }) => {
       setRefreshing(false);
     }
   };
-  
+
   // Handle like
   const handleLike = async () => {
     try {
       if (!user) return;
-      
+
       // Vibrate when liking
       Vibration.vibrate(50);
-      
+
       // Optimistic update
       const updatedLikes = post.likes || [];
       let newLikes;
-      
+
       if (isLiked) {
         newLikes = updatedLikes.filter(id => id !== user.id);
       } else {
         newLikes = [...updatedLikes, user.id];
       }
-      
+
       setPost({ ...post, likes: newLikes });
-      
+
       // Update in storage
-      if (useFirebase) {
-        if (isLiked) {
-          await Firebase.unlikePost(post.id, user.id);
-        } else {
-          await Firebase.likePost(post.id, user.id);
-        }
+      if (isLiked) {
+        await LocalStorage.unlikePost(post.id, user.id);
       } else {
-        if (isLiked) {
-          await LocalStorage.unlikePost(post.id, user.id);
-        } else {
-          await LocalStorage.likePost(post.id, user.id);
-        }
+        await LocalStorage.likePost(post.id, user.id);
       }
     } catch (error) {
       console.error('Error liking post:', error);
@@ -130,16 +116,16 @@ const PostDetailScreen = ({ route, navigation }) => {
       fetchPost();
     }
   };
-  
+
   // Add comment
   const addComment = async () => {
     if (!comment.trim()) {
       Alert.alert('Error', 'Please enter a comment');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       // Optimistic update
       const newComment = {
@@ -149,17 +135,13 @@ const PostDetailScreen = ({ route, navigation }) => {
         text: comment,
         createdAt: new Date().toISOString()
       };
-      
+
       const updatedComments = [...(post.comments || []), newComment];
       setPost({ ...post, comments: updatedComments });
       setComment('');
-      
+
       // Update in storage
-      if (useFirebase) {
-        await Firebase.addComment(post.id, user.id, user.displayName, comment);
-      } else {
-        await LocalStorage.addComment(post.id, user.id, user.displayName, comment);
-      }
+      await LocalStorage.addComment(post.id, user.id, user.displayName, comment);
     } catch (error) {
       console.error('Error adding comment:', error);
       Alert.alert('Error', 'Failed to add comment. Please try again.');
@@ -169,7 +151,7 @@ const PostDetailScreen = ({ route, navigation }) => {
       setLoading(false);
     }
   };
-  
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -193,28 +175,28 @@ const PostDetailScreen = ({ route, navigation }) => {
               </View>
             </View>
           </View>
-          
+
           <Text style={[styles.postText, { color: theme.text }]}>{post.text}</Text>
-          
+
           {post.imageUrl && (
             <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
           )}
-          
+
           <View style={styles.postActions}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.actionButton}
               onPress={handleLike}
             >
-              <Ionicons 
-                name={isLiked ? "heart" : "heart-outline"} 
-                size={24} 
-                color={isLiked ? theme.accent : theme.text} 
+              <Ionicons
+                name={isLiked ? "heart" : "heart-outline"}
+                size={24}
+                color={isLiked ? theme.accent : theme.text}
               />
               <Text style={[styles.actionText, { color: theme.text }]}>
                 {post.likes ? post.likes.length : 0}
               </Text>
             </TouchableOpacity>
-            
+
             <View style={styles.actionButton}>
               <Ionicons name="chatbubble-outline" size={22} color={theme.text} />
               <Text style={[styles.actionText, { color: theme.text }]}>
@@ -223,11 +205,11 @@ const PostDetailScreen = ({ route, navigation }) => {
             </View>
           </View>
         </View>
-        
+
         <View style={[styles.commentsHeader, { borderBottomColor: theme.border }]}>
           <Text style={[styles.commentsTitle, { color: theme.text }]}>Comments</Text>
         </View>
-        
+
         <FlatList
           data={post.comments || []}
           keyExtractor={(item, index) => item.id || index.toString()}
@@ -242,7 +224,7 @@ const PostDetailScreen = ({ route, navigation }) => {
           }
         />
       </View>
-      
+
       <View style={[styles.commentInputContainer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
         <TextInput
           style={[styles.commentInput, { color: theme.text, backgroundColor: theme.background }]}
@@ -252,7 +234,7 @@ const PostDetailScreen = ({ route, navigation }) => {
           onChangeText={setComment}
           multiline
         />
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.sendButton, { backgroundColor: theme.primary }]}
           onPress={addComment}
           disabled={loading}

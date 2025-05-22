@@ -1,8 +1,9 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as LocalStorage from '../services/localStorage';
-import { auth } from '../services/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+
+// Keys for AsyncStorage
+const USERS_KEY = '@SocialApp:users';
+const CURRENT_USER_KEY = '@SocialApp:currentUser';
 
 // Create context
 export const AuthContext = createContext();
@@ -11,73 +12,58 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [useFirebase, setUseFirebase] = useState(false);
 
   useEffect(() => {
-    // Check if user wants to use Firebase
-    const checkStorageMethod = async () => {
+    // Check AsyncStorage for user
+    const loadUser = async () => {
       try {
-        const method = await AsyncStorage.getItem('@SocialApp:storageMethod');
-        setUseFirebase(method === 'firebase');
+        const userJson = await AsyncStorage.getItem(CURRENT_USER_KEY);
+        const currentUser = userJson ? JSON.parse(userJson) : null;
+        setUser(currentUser);
       } catch (error) {
-        console.error('Error checking storage method:', error);
+        console.error('Error getting current user from AsyncStorage:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    checkStorageMethod();
-
-    // Set up authentication listener
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (useFirebase && firebaseUser) {
-        setUser({
-          id: firebaseUser.uid,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName,
-          photoURL: firebaseUser.photoURL,
-        });
-      } else if (!useFirebase) {
-        // Check local storage for user
-        LocalStorage.getCurrentUser()
-          .then(localUser => {
-            setUser(localUser);
-          })
-          .catch(error => {
-            console.error('Error getting current user from local storage:', error);
-          });
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [useFirebase]);
-
-  // Set storage method
-  const setStorageMethod = async (method) => {
-    try {
-      await AsyncStorage.setItem('@SocialApp:storageMethod', method);
-      setUseFirebase(method === 'firebase');
-    } catch (error) {
-      console.error('Error setting storage method:', error);
-    }
-  };
+    loadUser();
+  }, []);
 
   // Register user
   const register = async (email, password, displayName) => {
     try {
-      if (useFirebase) {
-        // Use Firebase
-        const firebaseUser = await import('../services/firebase').then(module => 
-          module.registerUser(email, password, displayName)
-        );
-        return firebaseUser;
-      } else {
-        // Use local storage
-        const localUser = await LocalStorage.registerUser(email, password, displayName);
-        setUser(localUser);
-        return localUser;
+      // Get existing users
+      const usersJson = await AsyncStorage.getItem(USERS_KEY);
+      const users = usersJson ? JSON.parse(usersJson) : [];
+
+      // Check if email already exists
+      const existingUser = users.find(user => user.email === email);
+      if (existingUser) {
+        throw new Error('Email already in use');
       }
+
+      // Create new user
+      const newUser = {
+        id: Date.now().toString(),
+        email,
+        password, // In a real app, you would hash this password
+        displayName,
+        createdAt: new Date().toISOString()
+      };
+
+      // Save user
+      users.push(newUser);
+      await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
+
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = newUser;
+
+      // Save current user
+      await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(userWithoutPassword));
+
+      setUser(userWithoutPassword);
+      return userWithoutPassword;
     } catch (error) {
       throw error;
     }
@@ -86,18 +72,27 @@ export const AuthProvider = ({ children }) => {
   // Login user
   const login = async (email, password) => {
     try {
-      if (useFirebase) {
-        // Use Firebase
-        const firebaseUser = await import('../services/firebase').then(module => 
-          module.loginUser(email, password)
-        );
-        return firebaseUser;
-      } else {
-        // Use local storage
-        const localUser = await LocalStorage.loginUser(email, password);
-        setUser(localUser);
-        return localUser;
+      // Get existing users
+      const usersJson = await AsyncStorage.getItem(USERS_KEY);
+      const users = usersJson ? JSON.parse(usersJson) : [];
+
+      // Find user by email
+      const user = users.find(user => user.email === email);
+      if (!user) {
+        throw new Error('User not found');
       }
+
+      // Check password
+      if (user.password !== password) {
+        throw new Error('Incorrect password');
+      }
+
+      // Save current user
+      const { password: _, ...userWithoutPassword } = user;
+      await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(userWithoutPassword));
+
+      setUser(userWithoutPassword);
+      return userWithoutPassword;
     } catch (error) {
       throw error;
     }
@@ -106,14 +101,8 @@ export const AuthProvider = ({ children }) => {
   // Logout user
   const logout = async () => {
     try {
-      if (useFirebase) {
-        // Use Firebase
-        await import('../services/firebase').then(module => module.logoutUser());
-      } else {
-        // Use local storage
-        await LocalStorage.logoutUser();
-        setUser(null);
-      }
+      await AsyncStorage.removeItem(CURRENT_USER_KEY);
+      setUser(null);
     } catch (error) {
       throw error;
     }
@@ -123,14 +112,26 @@ export const AuthProvider = ({ children }) => {
   const updateAvatar = async (avatarUrl) => {
     try {
       if (user) {
-        if (useFirebase) {
-          // Use Firebase
-          // This would be implemented in a real app
-        } else {
-          // Use local storage
-          await LocalStorage.updateUserAvatar(user.id, avatarUrl);
-          setUser({ ...user, avatarUrl });
-        }
+        // Get existing users
+        const usersJson = await AsyncStorage.getItem(USERS_KEY);
+        const users = usersJson ? JSON.parse(usersJson) : [];
+
+        // Find and update user
+        const updatedUsers = users.map(u => {
+          if (u.id === user.id) {
+            return { ...u, avatarUrl };
+          }
+          return u;
+        });
+
+        // Save updated users
+        await AsyncStorage.setItem(USERS_KEY, JSON.stringify(updatedUsers));
+
+        // Update current user
+        const updatedUser = { ...user, avatarUrl };
+        await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
+
+        setUser(updatedUser);
       }
     } catch (error) {
       throw error;
@@ -142,8 +143,6 @@ export const AuthProvider = ({ children }) => {
       value={{
         user,
         loading,
-        useFirebase,
-        setStorageMethod,
         register,
         login,
         logout,

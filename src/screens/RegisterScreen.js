@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  Alert, 
-  KeyboardAvoidingView, 
+import {
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  KeyboardAvoidingView,
   Platform,
   ScrollView
 } from 'react-native';
@@ -21,44 +21,52 @@ const RegisterScreen = ({ navigation }) => {
   const [displayName, setDisplayName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   const { register } = useAuth();
   const { theme } = useTheme();
-  
+
+  // Fill form with demo data
+  const fillDemoData = () => {
+    setDisplayName('Demo User');
+    setEmail('demo@example.com');
+    setPassword('demo123');
+    setConfirmPassword('demo123');
+  };
+
   const handleRegister = async () => {
     // Validate inputs
     if (!email || !password || !confirmPassword || !displayName) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-    
+
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
-    
+
     // Password validation
     if (password.length < 6) {
       Alert.alert('Error', 'Password must be at least 6 characters long');
       return;
     }
-    
+
     // Confirm password
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       await register(email, password, displayName);
       // Navigation is handled by the AuthContext
     } catch (error) {
       let errorMessage = 'An error occurred during registration';
-      
+
       if (error.message.includes('email-already-in-use') || error.message.includes('Email already in use')) {
         errorMessage = 'This email is already registered. Please use a different email or login.';
       } else if (error.message.includes('invalid-email')) {
@@ -66,13 +74,13 @@ const RegisterScreen = ({ navigation }) => {
       } else if (error.message.includes('weak-password')) {
         errorMessage = 'Password is too weak. Please use a stronger password.';
       }
-      
+
       Alert.alert('Registration Failed', errorMessage);
     } finally {
       setLoading(false);
     }
   };
-  
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -83,7 +91,7 @@ const RegisterScreen = ({ navigation }) => {
           <Text style={[styles.title, { color: theme.text }]}>Create Account</Text>
           <Text style={[styles.subtitle, { color: theme.placeholder }]}>Join our community today</Text>
         </View>
-        
+
         <View style={styles.form}>
           <View style={[styles.inputContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Ionicons name="person-outline" size={20} color={theme.placeholder} style={styles.inputIcon} />
@@ -95,7 +103,7 @@ const RegisterScreen = ({ navigation }) => {
               onChangeText={setDisplayName}
             />
           </View>
-          
+
           <View style={[styles.inputContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Ionicons name="mail-outline" size={20} color={theme.placeholder} style={styles.inputIcon} />
             <TextInput
@@ -108,7 +116,7 @@ const RegisterScreen = ({ navigation }) => {
               keyboardType="email-address"
             />
           </View>
-          
+
           <View style={[styles.inputContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Ionicons name="lock-closed-outline" size={20} color={theme.placeholder} style={styles.inputIcon} />
             <TextInput
@@ -120,14 +128,14 @@ const RegisterScreen = ({ navigation }) => {
               secureTextEntry={!showPassword}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.passwordToggle}>
-              <Ionicons 
-                name={showPassword ? "eye-off-outline" : "eye-outline"} 
-                size={20} 
-                color={theme.placeholder} 
+              <Ionicons
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={20}
+                color={theme.placeholder}
               />
             </TouchableOpacity>
           </View>
-          
+
           <View style={[styles.inputContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Ionicons name="lock-closed-outline" size={20} color={theme.placeholder} style={styles.inputIcon} />
             <TextInput
@@ -139,8 +147,8 @@ const RegisterScreen = ({ navigation }) => {
               secureTextEntry={!showPassword}
             />
           </View>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.button, { backgroundColor: theme.primary }]}
             onPress={handleRegister}
             disabled={loading}
@@ -149,7 +157,16 @@ const RegisterScreen = ({ navigation }) => {
               {loading ? 'Creating Account...' : 'Register'}
             </Text>
           </TouchableOpacity>
-          
+
+          <TouchableOpacity
+            style={[styles.demoButton, { borderColor: theme.primary }]}
+            onPress={fillDemoData}
+          >
+            <Text style={[styles.demoButtonText, { color: theme.primary }]}>
+              Use Demo Data
+            </Text>
+          </TouchableOpacity>
+
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: theme.placeholder }]}>
               Already have an account?

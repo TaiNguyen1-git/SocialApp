@@ -1,10 +1,10 @@
 import React from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  Switch, 
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Switch,
   Alert,
   ScrollView
 } from 'react-native';
@@ -13,9 +13,9 @@ import { useAuth } from '../utils/AuthContext';
 import { useTheme } from '../utils/ThemeContext';
 
 const SettingsScreen = () => {
-  const { logout, user, useFirebase, setStorageMethod } = useAuth();
+  const { logout, user } = useAuth();
   const { theme, isDark, toggleTheme } = useTheme();
-  
+
   // Handle logout
   const handleLogout = async () => {
     try {
@@ -25,7 +25,7 @@ const SettingsScreen = () => {
       Alert.alert('Error', 'Failed to log out. Please try again.');
     }
   };
-  
+
   // Confirm logout
   const confirmLogout = () => {
     Alert.alert(
@@ -44,33 +44,14 @@ const SettingsScreen = () => {
       ]
     );
   };
-  
-  // Toggle storage method
-  const toggleStorageMethod = () => {
-    Alert.alert(
-      'Change Storage Method',
-      `Are you sure you want to switch to ${useFirebase ? 'local storage' : 'Firebase'}? This will log you out.`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Switch',
-          onPress: async () => {
-            await setStorageMethod(useFirebase ? 'local' : 'firebase');
-            await logout();
-          },
-        },
-      ]
-    );
-  };
-  
+
+
+
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.text }]}>Account</Text>
-        
+
         <View style={[styles.settingItem, { borderBottomColor: theme.border }]}>
           <View style={styles.settingInfo}>
             <Ionicons name="person-outline" size={22} color={theme.primary} style={styles.settingIcon} />
@@ -78,7 +59,7 @@ const SettingsScreen = () => {
           </View>
           <Text style={[styles.settingValue, { color: theme.placeholder }]}>{user.displayName}</Text>
         </View>
-        
+
         <View style={[styles.settingItem, { borderBottomColor: theme.border }]}>
           <View style={styles.settingInfo}>
             <Ionicons name="mail-outline" size={22} color={theme.primary} style={styles.settingIcon} />
@@ -87,17 +68,17 @@ const SettingsScreen = () => {
           <Text style={[styles.settingValue, { color: theme.placeholder }]}>{user.email}</Text>
         </View>
       </View>
-      
+
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.text }]}>Appearance</Text>
-        
+
         <View style={[styles.settingItem, { borderBottomColor: theme.border }]}>
           <View style={styles.settingInfo}>
-            <Ionicons 
-              name={isDark ? "moon-outline" : "sunny-outline"} 
-              size={22} 
-              color={theme.primary} 
-              style={styles.settingIcon} 
+            <Ionicons
+              name={isDark ? "moon-outline" : "sunny-outline"}
+              size={22}
+              color={theme.primary}
+              style={styles.settingIcon}
             />
             <Text style={[styles.settingLabel, { color: theme.text }]}>Dark Mode</Text>
           </View>
@@ -109,34 +90,12 @@ const SettingsScreen = () => {
           />
         </View>
       </View>
-      
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.text }]}>Data Storage</Text>
-        
-        <View style={[styles.settingItem, { borderBottomColor: theme.border }]}>
-          <View style={styles.settingInfo}>
-            <Ionicons 
-              name={useFirebase ? "cloud-outline" : "phone-portrait-outline"} 
-              size={22} 
-              color={theme.primary} 
-              style={styles.settingIcon} 
-            />
-            <Text style={[styles.settingLabel, { color: theme.text }]}>
-              {useFirebase ? 'Using Firebase' : 'Using Local Storage'}
-            </Text>
-          </View>
-          <Switch
-            value={!useFirebase}
-            onValueChange={toggleStorageMethod}
-            trackColor={{ false: theme.placeholder, true: theme.primary }}
-            thumbColor={theme.background}
-          />
-        </View>
-      </View>
-      
+
+
+
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.text }]}>About</Text>
-        
+
         <View style={[styles.settingItem, { borderBottomColor: theme.border }]}>
           <View style={styles.settingInfo}>
             <Ionicons name="information-circle-outline" size={22} color={theme.primary} style={styles.settingIcon} />
@@ -145,8 +104,8 @@ const SettingsScreen = () => {
           <Text style={[styles.settingValue, { color: theme.placeholder }]}>1.0.0</Text>
         </View>
       </View>
-      
-      <TouchableOpacity 
+
+      <TouchableOpacity
         style={[styles.logoutButton, { backgroundColor: theme.error }]}
         onPress={confirmLogout}
       >

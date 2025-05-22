@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  Image, 
-  TouchableOpacity, 
-  FlatList, 
+import {
+  StyleSheet,
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  FlatList,
   Alert,
   ActivityIndicator
 } from 'react-native';
@@ -14,29 +14,22 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../utils/AuthContext';
 import { useTheme } from '../utils/ThemeContext';
 import * as LocalStorage from '../services/localStorage';
-import * as Firebase from '../services/firebase';
 
 const ProfileScreen = ({ navigation }) => {
   const [userPosts, setUserPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [changingAvatar, setChangingAvatar] = useState(false);
-  
-  const { user, useFirebase, updateAvatar } = useAuth();
+
+  const { user, updateAvatar } = useAuth();
   const { theme } = useTheme();
-  
+
   // Fetch user posts
   const fetchUserPosts = async () => {
     try {
       setLoading(true);
-      let allPosts;
-      
-      if (useFirebase) {
-        allPosts = await Firebase.getPosts();
-      } else {
-        allPosts = await LocalStorage.getPosts();
-      }
-      
+      const allPosts = await LocalStorage.getPosts();
+
       // Filter posts by user ID
       const filteredPosts = allPosts.filter(post => post.userId === user.id);
       setUserPosts(filteredPosts);
@@ -47,29 +40,29 @@ const ProfileScreen = ({ navigation }) => {
       setRefreshing(false);
     }
   };
-  
+
   // Initial fetch
   useEffect(() => {
     fetchUserPosts();
-  }, [useFirebase]);
-  
+  }, []);
+
   // Handle refresh
   const onRefresh = () => {
     setRefreshing(true);
     fetchUserPosts();
   };
-  
+
   // Change avatar
   const changeAvatar = async () => {
     try {
       // Request media library permissions
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
+
       if (status !== 'granted') {
         Alert.alert('Permission Denied', 'We need camera roll permissions to change your avatar.');
         return;
       }
-      
+
       // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -77,25 +70,17 @@ const ProfileScreen = ({ navigation }) => {
         aspect: [1, 1],
         quality: 0.8,
       });
-      
+
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setChangingAvatar(true);
-        
+
         try {
-          let avatarUrl;
-          
-          if (useFirebase) {
-            // Upload to Firebase Storage
-            const imagePath = `avatars/${user.id}`;
-            avatarUrl = await Firebase.uploadImage(result.assets[0].uri, imagePath);
-          } else {
-            // For local storage, just use the local URI
-            avatarUrl = result.assets[0].uri;
-          }
-          
+          // For local storage, just use the local URI
+          const avatarUrl = result.assets[0].uri;
+
           // Update user avatar
           await updateAvatar(avatarUrl);
-          
+
           Alert.alert('Success', 'Avatar updated successfully!');
         } catch (error) {
           console.error('Error updating avatar:', error);
@@ -109,16 +94,16 @@ const ProfileScreen = ({ navigation }) => {
       Alert.alert('Error', 'Failed to pick image. Please try again.');
     }
   };
-  
+
   // Navigate to post detail
   const navigateToPostDetail = (post) => {
     navigation.navigate('PostDetail', { post });
   };
-  
+
   // Render post item
   const renderPostItem = ({ item }) => {
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.postItem, { backgroundColor: theme.card, borderColor: theme.border }]}
         onPress={() => navigateToPostDetail(item)}
       >
@@ -148,7 +133,7 @@ const ProfileScreen = ({ navigation }) => {
       </TouchableOpacity>
     );
   };
-  
+
   // Render empty state
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
@@ -157,7 +142,7 @@ const ProfileScreen = ({ navigation }) => {
       <Text style={[styles.emptySubtext, { color: theme.placeholder }]}>
         Your posts will appear here
       </Text>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.createButton, { backgroundColor: theme.primary }]}
         onPress={() => navigation.navigate('Create')}
       >
@@ -165,12 +150,12 @@ const ProfileScreen = ({ navigation }) => {
       </TouchableOpacity>
     </View>
   );
-  
+
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.profileHeader, { backgroundColor: theme.card, borderColor: theme.border }]}>
         <View style={styles.profileInfo}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.avatarContainer}
             onPress={changeAvatar}
             disabled={changingAvatar}
@@ -194,13 +179,13 @@ const ProfileScreen = ({ navigation }) => {
               </View>
             )}
           </TouchableOpacity>
-          
+
           <View style={styles.userInfo}>
             <Text style={[styles.displayName, { color: theme.text }]}>{user.displayName}</Text>
             <Text style={[styles.email, { color: theme.placeholder }]}>{user.email}</Text>
           </View>
         </View>
-        
+
         <View style={styles.stats}>
           <View style={styles.statItem}>
             <Text style={[styles.statNumber, { color: theme.text }]}>{userPosts.length}</Text>
@@ -208,12 +193,12 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
       </View>
-      
+
       <View style={styles.postsContainer}>
         <View style={[styles.postsHeader, { borderBottomColor: theme.border }]}>
           <Text style={[styles.postsTitle, { color: theme.text }]}>My Posts</Text>
         </View>
-        
+
         {loading && !refreshing ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={theme.primary} />

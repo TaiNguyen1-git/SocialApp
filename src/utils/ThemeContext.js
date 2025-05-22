@@ -45,7 +45,7 @@ export const ThemeProvider = ({ children }) => {
         const savedThemeMode = await AsyncStorage.getItem('@SocialApp:themeMode');
         if (savedThemeMode) {
           setThemeMode(savedThemeMode);
-          
+
           if (savedThemeMode === 'light') {
             setTheme(lightTheme);
           } else if (savedThemeMode === 'dark') {
@@ -75,10 +75,10 @@ export const ThemeProvider = ({ children }) => {
     try {
       const newThemeMode = theme.mode === 'light' ? 'dark' : 'light';
       const newTheme = theme.mode === 'light' ? darkTheme : lightTheme;
-      
+
       setTheme(newTheme);
       setThemeMode(newThemeMode);
-      
+
       await AsyncStorage.setItem('@SocialApp:themeMode', newThemeMode);
     } catch (error) {
       console.error('Error saving theme preference:', error);
@@ -86,10 +86,10 @@ export const ThemeProvider = ({ children }) => {
   };
 
   // Set specific theme
-  const setThemeMode = async (mode) => {
+  const changeThemeMode = async (mode) => {
     try {
       setThemeMode(mode);
-      
+
       if (mode === 'light') {
         setTheme(lightTheme);
       } else if (mode === 'dark') {
@@ -98,7 +98,7 @@ export const ThemeProvider = ({ children }) => {
         // System default
         setTheme(deviceTheme === 'dark' ? darkTheme : lightTheme);
       }
-      
+
       await AsyncStorage.setItem('@SocialApp:themeMode', mode);
     } catch (error) {
       console.error('Error saving theme preference:', error);
@@ -111,7 +111,7 @@ export const ThemeProvider = ({ children }) => {
         theme,
         themeMode,
         toggleTheme,
-        setThemeMode,
+        setThemeMode: changeThemeMode,
         isDark: theme.mode === 'dark',
       }}
     >

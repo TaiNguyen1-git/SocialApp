@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  Image, 
-  Alert, 
+import {
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -17,27 +17,26 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../utils/AuthContext';
 import { useTheme } from '../utils/ThemeContext';
 import * as LocalStorage from '../services/localStorage';
-import * as Firebase from '../services/firebase';
 
 const CreatePostScreen = ({ navigation }) => {
   const [text, setText] = useState('');
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
-  
-  const { user, useFirebase } = useAuth();
+
+  const { user } = useAuth();
   const { theme } = useTheme();
-  
+
   // Request permissions and pick image from library
   const pickImage = async () => {
     try {
       // Request media library permissions
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
+
       if (status !== 'granted') {
         Alert.alert('Permission Denied', 'We need camera roll permissions to upload images.');
         return;
       }
-      
+
       // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -45,7 +44,7 @@ const CreatePostScreen = ({ navigation }) => {
         aspect: [4, 3],
         quality: 0.8,
       });
-      
+
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setImage(result.assets[0].uri);
       }
@@ -54,25 +53,25 @@ const CreatePostScreen = ({ navigation }) => {
       Alert.alert('Error', 'Failed to pick image. Please try again.');
     }
   };
-  
+
   // Take a photo with camera
   const takePhoto = async () => {
     try {
       // Request camera permissions
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      
+
       if (status !== 'granted') {
         Alert.alert('Permission Denied', 'We need camera permissions to take photos.');
         return;
       }
-      
+
       // Launch camera
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
       });
-      
+
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setImage(result.assets[0].uri);
       }
@@ -81,7 +80,7 @@ const CreatePostScreen = ({ navigation }) => {
       Alert.alert('Error', 'Failed to take photo. Please try again.');
     }
   };
-  
+
   // Create post
   const createPost = async () => {
     // Validate inputs
@@ -89,38 +88,28 @@ const CreatePostScreen = ({ navigation }) => {
       Alert.alert('Error', 'Please add some text or an image to your post.');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       let imageUrl = null;
-      
+
       // Upload image if selected
       if (image) {
-        if (useFirebase) {
-          // Upload to Firebase Storage
-          const imagePath = `posts/${user.id}/${Date.now()}`;
-          imageUrl = await Firebase.uploadImage(image, imagePath);
-        } else {
-          // For local storage, just use the local URI
-          imageUrl = image;
-        }
+        // For local storage, just use the local URI
+        imageUrl = image;
       }
-      
+
       // Create post
-      if (useFirebase) {
-        await Firebase.createPost(user.id, user.displayName, text, imageUrl);
-      } else {
-        await LocalStorage.createPost(user.id, user.displayName, text, imageUrl);
-      }
-      
+      await LocalStorage.createPost(user.id, user.displayName, text, imageUrl);
+
       // Reset form and navigate back
       setText('');
       setImage(null);
-      
+
       // Navigate to Home screen
       navigation.navigate('Home');
-      
+
       // Show success message
       Alert.alert('Success', 'Your post has been created!');
     } catch (error) {
@@ -130,7 +119,7 @@ const CreatePostScreen = ({ navigation }) => {
       setLoading(false);
     }
   };
-  
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -140,7 +129,7 @@ const CreatePostScreen = ({ navigation }) => {
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.text }]}>Create Post</Text>
         </View>
-        
+
         <View style={styles.form}>
           <TextInput
             style={[styles.textInput, { color: theme.text, backgroundColor: theme.card, borderColor: theme.border }]}
@@ -152,11 +141,11 @@ const CreatePostScreen = ({ navigation }) => {
             numberOfLines={5}
             textAlignVertical="top"
           />
-          
+
           {image && (
             <View style={styles.imagePreviewContainer}>
               <Image source={{ uri: image }} style={styles.imagePreview} />
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.removeImageButton, { backgroundColor: theme.error }]}
                 onPress={() => setImage(null)}
               >
@@ -164,17 +153,17 @@ const CreatePostScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           )}
-          
+
           <View style={styles.imageButtons}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.imageButton, { backgroundColor: theme.card, borderColor: theme.border }]}
               onPress={pickImage}
             >
               <Ionicons name="images-outline" size={24} color={theme.primary} />
               <Text style={[styles.imageButtonText, { color: theme.text }]}>Gallery</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[styles.imageButton, { backgroundColor: theme.card, borderColor: theme.border }]}
               onPress={takePhoto}
             >
@@ -182,8 +171,8 @@ const CreatePostScreen = ({ navigation }) => {
               <Text style={[styles.imageButtonText, { color: theme.text }]}>Camera</Text>
             </TouchableOpacity>
           </View>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.button, { backgroundColor: theme.primary }]}
             onPress={createPost}
             disabled={loading}

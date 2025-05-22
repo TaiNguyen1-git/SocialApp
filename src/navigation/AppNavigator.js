@@ -24,7 +24,7 @@ const Tab = createBottomTabNavigator();
 // Auth Navigator (Login/Register)
 const AuthNavigator = () => {
   const { theme } = useTheme();
-  
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -46,7 +46,7 @@ const AuthNavigator = () => {
 // Main Tab Navigator
 const MainTabNavigator = () => {
   const { theme } = useTheme();
-  
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -91,7 +91,7 @@ const MainTabNavigator = () => {
 // Main Stack Navigator (includes tabs and other screens)
 const MainStackNavigator = () => {
   const { theme } = useTheme();
-  
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -104,9 +104,9 @@ const MainStackNavigator = () => {
         },
       }}
     >
-      <Stack.Screen 
-        name="Main" 
-        component={MainTabNavigator} 
+      <Stack.Screen
+        name="Main"
+        component={MainTabNavigator}
         options={{ headerShown: false }}
       />
       <Stack.Screen name="PostDetail" component={PostDetailScreen} />
@@ -118,11 +118,11 @@ const MainStackNavigator = () => {
 const AppNavigator = () => {
   const { user, loading } = useAuth();
   const { theme } = useTheme();
-  
+
   if (loading) {
     return null; // Or a loading screen
   }
-  
+
   return (
     <NavigationContainer
       theme={{
@@ -134,6 +134,28 @@ const AppNavigator = () => {
           text: theme.text,
           border: theme.border,
           notification: theme.accent,
+        },
+        fonts: {
+          regular: {
+            fontFamily: 'sans-serif',
+            fontWeight: 'normal',
+          },
+          medium: {
+            fontFamily: 'sans-serif-medium',
+            fontWeight: 'normal',
+          },
+          light: {
+            fontFamily: 'sans-serif-light',
+            fontWeight: 'normal',
+          },
+          thin: {
+            fontFamily: 'sans-serif-thin',
+            fontWeight: 'normal',
+          },
+          bold: {
+            fontFamily: 'sans-serif',
+            fontWeight: 'bold',
+          },
         },
       }}
     >

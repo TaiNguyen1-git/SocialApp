@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  Alert, 
-  KeyboardAvoidingView, 
+import {
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  KeyboardAvoidingView,
   Platform,
-  ScrollView,
-  Switch
+  ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../utils/AuthContext';
@@ -20,32 +19,32 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  
-  const { login, setStorageMethod, useFirebase } = useAuth();
+
+  const { login } = useAuth();
   const { theme } = useTheme();
-  
+
   const handleLogin = async () => {
     // Validate inputs
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-    
+
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       await login(email, password);
       // Navigation is handled by the AuthContext
     } catch (error) {
       let errorMessage = 'An error occurred during login';
-      
+
       if (error.message.includes('user-not-found') || error.message.includes('User not found')) {
         errorMessage = 'User not found. Please check your email or register a new account.';
       } else if (error.message.includes('wrong-password') || error.message.includes('Incorrect password')) {
@@ -55,17 +54,15 @@ const LoginScreen = ({ navigation }) => {
       } else if (error.message.includes('too-many-requests')) {
         errorMessage = 'Too many failed login attempts. Please try again later.';
       }
-      
+
       Alert.alert('Login Failed', errorMessage);
     } finally {
       setLoading(false);
     }
   };
-  
-  const toggleStorageMethod = () => {
-    setStorageMethod(useFirebase ? 'local' : 'firebase');
-  };
-  
+
+
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -76,7 +73,7 @@ const LoginScreen = ({ navigation }) => {
           <Text style={[styles.title, { color: theme.text }]}>Social App</Text>
           <Text style={[styles.subtitle, { color: theme.placeholder }]}>Connect with friends and share moments</Text>
         </View>
-        
+
         <View style={styles.form}>
           <View style={[styles.inputContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Ionicons name="mail-outline" size={20} color={theme.placeholder} style={styles.inputIcon} />
@@ -90,7 +87,7 @@ const LoginScreen = ({ navigation }) => {
               keyboardType="email-address"
             />
           </View>
-          
+
           <View style={[styles.inputContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Ionicons name="lock-closed-outline" size={20} color={theme.placeholder} style={styles.inputIcon} />
             <TextInput
@@ -102,15 +99,15 @@ const LoginScreen = ({ navigation }) => {
               secureTextEntry={!showPassword}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.passwordToggle}>
-              <Ionicons 
-                name={showPassword ? "eye-off-outline" : "eye-outline"} 
-                size={20} 
-                color={theme.placeholder} 
+              <Ionicons
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={20}
+                color={theme.placeholder}
               />
             </TouchableOpacity>
           </View>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.button, { backgroundColor: theme.primary }]}
             onPress={handleLogin}
             disabled={loading}
@@ -119,16 +116,6 @@ const LoginScreen = ({ navigation }) => {
               {loading ? 'Logging in...' : 'Login'}
             </Text>
           </TouchableOpacity>
-          
-          <View style={styles.storageToggle}>
-            <Text style={[styles.storageText, { color: theme.text }]}>Use Local Storage</Text>
-            <Switch
-              value={!useFirebase}
-              onValueChange={toggleStorageMethod}
-              trackColor={{ false: theme.placeholder, true: theme.primary }}
-              thumbColor={theme.background}
-            />
-          </View>
           
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: theme.placeholder }]}>
@@ -201,14 +188,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  storageToggle: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+
+  demoAccount: {
     alignItems: 'center',
     marginTop: 20,
   },
-  storageText: {
-    marginRight: 10,
+  demoText: {
+    fontSize: 14,
+    fontStyle: 'italic',
   },
   footer: {
     flexDirection: 'row',

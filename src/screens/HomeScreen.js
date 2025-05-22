@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  FlatList, 
-  Image, 
-  TouchableOpacity, 
+import {
+  StyleSheet,
+  View,
+  Text,
+  FlatList,
+  Image,
+  TouchableOpacity,
   RefreshControl,
   ActivityIndicator
 } from 'react-native';
@@ -14,7 +14,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../utils/AuthContext';
 import { useTheme } from '../utils/ThemeContext';
 import * as LocalStorage from '../services/localStorage';
-import * as Firebase from '../services/firebase';
 import { Vibration } from 'react-native';
 
 // Post component
@@ -22,15 +21,15 @@ const Post = ({ item, onLike, onComment, onPress, currentUserId, theme }) => {
   const isLiked = item.likes && item.likes.includes(currentUserId);
   const likeCount = item.likes ? item.likes.length : 0;
   const commentCount = item.comments ? item.comments.length : 0;
-  
+
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
-  
+
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[styles.postContainer, { backgroundColor: theme.card, borderColor: theme.border }]}
       onPress={onPress}
       activeOpacity={0.9}
@@ -50,27 +49,27 @@ const Post = ({ item, onLike, onComment, onPress, currentUserId, theme }) => {
           </View>
         </View>
       </View>
-      
+
       <Text style={[styles.postText, { color: theme.text }]}>{item.text}</Text>
-      
+
       {item.imageUrl && (
         <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
       )}
-      
+
       <View style={styles.postActions}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.actionButton}
           onPress={() => onLike(item.id)}
         >
-          <Ionicons 
-            name={isLiked ? "heart" : "heart-outline"} 
-            size={24} 
-            color={isLiked ? theme.accent : theme.text} 
+          <Ionicons
+            name={isLiked ? "heart" : "heart-outline"}
+            size={24}
+            color={isLiked ? theme.accent : theme.text}
           />
           <Text style={[styles.actionText, { color: theme.text }]}>{likeCount}</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.actionButton}
           onPress={() => onComment(item.id)}
         >
@@ -86,22 +85,15 @@ const HomeScreen = ({ navigation }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  
-  const { user, useFirebase } = useAuth();
+
+  const { user } = useAuth();
   const { theme } = useTheme();
-  
+
   // Fetch posts
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      let fetchedPosts;
-      
-      if (useFirebase) {
-        fetchedPosts = await Firebase.getPosts();
-      } else {
-        fetchedPosts = await LocalStorage.getPosts();
-      }
-      
+      const fetchedPosts = await LocalStorage.getPosts();
       setPosts(fetchedPosts);
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -110,71 +102,60 @@ const HomeScreen = ({ navigation }) => {
       setRefreshing(false);
     }
   };
-  
+
   // Initial fetch
   useEffect(() => {
     fetchPosts();
-  }, [useFirebase]);
-  
+  }, []);
+
   // Refresh when screen is focused
   useFocusEffect(
     useCallback(() => {
       fetchPosts();
-    }, [useFirebase])
+    }, [])
   );
-  
+
   // Handle refresh
   const onRefresh = () => {
     setRefreshing(true);
     fetchPosts();
   };
-  
+
   // Handle like
   const handleLike = async (postId) => {
     try {
       if (!user) return;
-      
+
       // Vibrate when liking
       Vibration.vibrate(50);
-      
+
       // Optimistic update
       const updatedPosts = posts.map(post => {
         if (post.id === postId) {
           const isLiked = post.likes && post.likes.includes(user.id);
           let likes = post.likes || [];
-          
+
           if (isLiked) {
             likes = likes.filter(id => id !== user.id);
           } else {
             likes = [...likes, user.id];
           }
-          
+
           return { ...post, likes };
         }
         return post;
       });
-      
+
       setPosts(updatedPosts);
-      
+
       // Update in storage
-      if (useFirebase) {
-        const post = posts.find(p => p.id === postId);
-        const isLiked = post.likes && post.likes.includes(user.id);
-        
-        if (isLiked) {
-          await Firebase.unlikePost(postId, user.id);
-        } else {
-          await Firebase.likePost(postId, user.id);
-        }
+      const post = posts.find(p => p.id === postId);
+      const isLiked = post.likes && post.likes.includes(user.id);
+
+      if (isLiked) {
+        await LocalStorage.unlikePost(postId, user.id);
       } else {
-        const post = posts.find(p => p.id === postId);
-        const isLiked = post.likes && post.likes.includes(user.id);
-        
-        if (isLiked) {
-          await LocalStorage.unlikePost(postId, user.id);
-        } else {
-          await LocalStorage.likePost(postId, user.id);
-        }
+        await LocalStorage.likePost(postId, user.id);
       }
     } catch (error) {
       console.error('Error liking post:', error);
@@ -182,12 +163,12 @@ const HomeScreen = ({ navigation }) => {
       fetchPosts();
     }
   };
-  
+
   // Navigate to post detail
   const navigateToPostDetail = (post) => {
     navigation.navigate('PostDetail', { post });
   };
-  
+
   // Render empty state
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
@@ -198,7 +179,7 @@ const HomeScreen = ({ navigation }) => {
       </Text>
     </View>
   );
-  
+
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {loading && !refreshing ? (
