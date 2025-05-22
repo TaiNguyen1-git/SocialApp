@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 // Import các context provider và navigator
 import { AuthProvider } from './src/utils/AuthContext';
 import { ThemeProvider } from './src/utils/ThemeContext';
+import { NotificationProvider } from './src/utils/NotificationContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { initializeMockData } from './src/data/mockData';
 
@@ -30,8 +31,11 @@ export default function App() {
         <AuthProvider>
           {/* ThemeProvider quản lý chủ đề sáng/tối */}
           <ThemeProvider>
-            {/* AppNavigator xử lý điều hướng trong ứng dụng */}
-            <AppNavigator />
+            {/* NotificationProvider quản lý thông báo */}
+            <NotificationProvider>
+              {/* AppNavigator xử lý điều hướng trong ứng dụng */}
+              <AppNavigator />
+            </NotificationProvider>
           </ThemeProvider>
         </AuthProvider>
       </SafeAreaProvider>

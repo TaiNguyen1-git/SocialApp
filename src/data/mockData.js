@@ -9,42 +9,42 @@ const POSTS_KEY = '@SocialApp:posts';
 const sampleUsers = [
   {
     id: '1',
-    email: 'john@example.com',
+    email: 'minh@example.com',
     password: 'password123', // Trong ứng dụng thực tế, mật khẩu nên được mã hóa
-    displayName: 'John Doe',
-    avatarUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
+    displayName: 'Nguyễn Văn Minh',
+    avatarUrl: null,
     createdAt: new Date(2023, 0, 15).toISOString()
   },
   {
     id: '2',
-    email: 'jane@example.com',
+    email: 'linh@example.com',
     password: 'password123',
-    displayName: 'Jane Smith',
-    avatarUrl: 'https://randomuser.me/api/portraits/women/1.jpg',
+    displayName: 'Trần Thị Linh',
+    avatarUrl: null,
     createdAt: new Date(2023, 1, 20).toISOString()
   },
   {
     id: '3',
-    email: 'bob@example.com',
+    email: 'duc@example.com',
     password: 'password123',
-    displayName: 'Bob Johnson',
-    avatarUrl: 'https://randomuser.me/api/portraits/men/2.jpg',
+    displayName: 'Lê Văn Đức',
+    avatarUrl: null,
     createdAt: new Date(2023, 2, 10).toISOString()
   },
   {
     id: '4',
-    email: 'alice@example.com',
+    email: 'hoa@example.com',
     password: 'password123',
-    displayName: 'Alice Williams',
-    avatarUrl: 'https://randomuser.me/api/portraits/women/2.jpg',
+    displayName: 'Phạm Thị Hoa',
+    avatarUrl: null,
     createdAt: new Date(2023, 3, 5).toISOString()
   },
   {
     id: '5',
     email: 'demo@example.com',
     password: 'demo123',
-    displayName: 'Demo User',
-    avatarUrl: 'https://randomuser.me/api/portraits/lego/1.jpg',
+    displayName: 'Người dùng Demo',
+    avatarUrl: null,
     createdAt: new Date(2023, 4, 1).toISOString()
   }
 ];
@@ -54,23 +54,36 @@ const samplePosts = [
   {
     id: '1',
     userId: '1',
-    displayName: 'John Doe',
-    text: 'Just finished a great book! Would highly recommend "The Alchemist" by Paulo Coelho. #reading #books',
-    imageUrl: 'https://source.unsplash.com/random/800x600/?book',
+    displayName: 'Nguyễn Văn Minh',
+    text: 'Hôm nay đi thăm vịnh Hạ Long. Cảnh đẹp quá trời! 🌊 #dulich #halong #vietnam #canh_dep',
     likes: ['2', '3', '4'],
     comments: [
       {
         id: '101',
         userId: '2',
-        displayName: 'Jane Smith',
-        text: 'I loved that book too! So inspiring.',
+        displayName: 'Trần Thị Linh',
+        text: 'Tuyệt vời quá! Mình cũng muốn đi một lần.',
+        parentCommentId: null,
+        replies: [
+          {
+            id: '101-1',
+            userId: '1',
+            displayName: 'Nguyễn Văn Minh',
+            text: '@Trần Thị Linh Bạn nên đi vào mùa hè, thời tiết đẹp lắm!',
+            parentCommentId: '101',
+            replies: [],
+            createdAt: new Date(2023, 5, 10, 14, 45).toISOString()
+          }
+        ],
         createdAt: new Date(2023, 5, 10, 14, 30).toISOString()
       },
       {
         id: '102',
         userId: '4',
-        displayName: 'Alice Williams',
-        text: 'Adding it to my reading list!',
+        displayName: 'Phạm Thị Hoa',
+        text: 'Thêm vào danh sách du lịch của mình ngay!',
+        parentCommentId: null,
+        replies: [],
         createdAt: new Date(2023, 5, 10, 15, 45).toISOString()
       }
     ],
@@ -79,16 +92,17 @@ const samplePosts = [
   {
     id: '2',
     userId: '2',
-    displayName: 'Jane Smith',
-    text: 'Beautiful sunset at the beach today! 🌅 #nature #sunset #beach',
-    imageUrl: 'https://source.unsplash.com/random/800x600/?sunset,beach',
+    displayName: 'Trần Thị Linh',
+    text: 'Hoàng hôn ở biển Nha Trang hôm nay đẹp tuyệt vời! 🌅 Kết thúc một ngày tuyệt vời. #thiennhien #hoang_hon #bien #binh_yen',
     likes: ['1', '3', '5'],
     comments: [
       {
         id: '201',
         userId: '3',
-        displayName: 'Bob Johnson',
-        text: 'Wow, stunning view!',
+        displayName: 'Lê Văn Đức',
+        text: 'Wow, nghe tuyệt vời quá! Không gì bằng một hoàng hôn đẹp.',
+        parentCommentId: null,
+        replies: [],
         createdAt: new Date(2023, 5, 11, 9, 15).toISOString()
       }
     ],
@@ -97,30 +111,35 @@ const samplePosts = [
   {
     id: '3',
     userId: '3',
-    displayName: 'Bob Johnson',
-    text: 'Just got a new puppy! Meet Max 🐶 #pets #dogs #puppy',
-    imageUrl: 'https://source.unsplash.com/random/800x600/?puppy',
+    displayName: 'Lê Văn Đức',
+    text: 'Vừa mới nuôi thêm một chú chó con! Gặp gỡ Milo nhé 🐶 Nó đã chiếm trọn trái tim và chiếc ghế yêu thích của mình rồi. #thu_cung #cho #cho_con #thanh_vien_moi',
     likes: ['1', '2', '4', '5'],
     comments: [
       {
         id: '301',
         userId: '1',
-        displayName: 'John Doe',
-        text: 'So cute! What breed is he?',
+        displayName: 'Nguyễn Văn Minh',
+        text: 'Dễ thương quá! Giống gì vậy bạn?',
+        parentCommentId: null,
+        replies: [],
         createdAt: new Date(2023, 5, 12, 11, 30).toISOString()
       },
       {
         id: '302',
         userId: '2',
-        displayName: 'Jane Smith',
-        text: 'Adorable! 😍',
+        displayName: 'Trần Thị Linh',
+        text: 'Đáng yêu quá! 😍 Chó con là tuyệt nhất!',
+        parentCommentId: null,
+        replies: [],
         createdAt: new Date(2023, 5, 12, 12, 45).toISOString()
       },
       {
         id: '303',
         userId: '5',
-        displayName: 'Demo User',
-        text: 'Welcome to the family, Max!',
+        displayName: 'Người dùng Demo',
+        text: 'Chào mừng Milo đến với gia đình!',
+        parentCommentId: null,
+        replies: [],
         createdAt: new Date(2023, 5, 12, 14, 20).toISOString()
       }
     ],
@@ -129,23 +148,26 @@ const samplePosts = [
   {
     id: '4',
     userId: '4',
-    displayName: 'Alice Williams',
-    text: 'Just completed my first marathon! 🏃‍♀️ #running #fitness #achievement',
-    imageUrl: 'https://source.unsplash.com/random/800x600/?marathon',
+    displayName: 'Phạm Thị Hoa',
+    text: 'Vừa hoàn thành cuộc chạy marathon đầu tiên! 🏃‍♀️ 42km với sự quyết tâm tuyệt đối. Cảm thấy tự hào và kiệt sức! #chay_bo #the_duc #thanh_tuu #marathon',
     likes: ['1', '3', '5'],
     comments: [
       {
         id: '401',
         userId: '5',
-        displayName: 'Demo User',
-        text: 'Congratulations! That\'s a huge accomplishment!',
+        displayName: 'Người dùng Demo',
+        text: 'Chúc mừng! Đó là một thành tựu tuyệt vời!',
+        parentCommentId: null,
+        replies: [],
         createdAt: new Date(2023, 5, 13, 16, 10).toISOString()
       },
       {
         id: '402',
         userId: '1',
-        displayName: 'John Doe',
-        text: 'Amazing! How long did you train for?',
+        displayName: 'Nguyễn Văn Minh',
+        text: 'Tuyệt vời! Bạn tập luyện bao lâu vậy?',
+        parentCommentId: null,
+        replies: [],
         createdAt: new Date(2023, 5, 13, 17, 30).toISOString()
       }
     ],
@@ -154,41 +176,65 @@ const samplePosts = [
   {
     id: '5',
     userId: '5',
-    displayName: 'Demo User',
-    text: 'Trying out a new recipe today - homemade pizza! 🍕 #cooking #food #pizza',
-    imageUrl: 'https://source.unsplash.com/random/800x600/?pizza',
+    displayName: 'Người dùng Demo',
+    text: 'Hôm nay thử làm pizza tại nhà! 🍕 Bột làm ra hoàn hảo và topping tươi từ vườn nhà. #nau_an #do_an #pizza #tu_lam',
     likes: ['2', '4'],
     comments: [
       {
         id: '501',
         userId: '4',
-        displayName: 'Alice Williams',
-        text: 'Looks delicious! Care to share the recipe?',
+        displayName: 'Phạm Thị Hoa',
+        text: 'Nghe ngon quá! Chia sẻ công thức được không?',
+        parentCommentId: null,
+        replies: [],
         createdAt: new Date(2023, 5, 14, 19, 45).toISOString()
       }
     ],
     createdAt: new Date(2023, 5, 14, 18, 30).toISOString()
+  },
+  {
+    id: '6',
+    userId: '1',
+    displayName: 'Nguyễn Văn Minh',
+    text: 'Buổi sáng cà phê và code ☕️ Đang làm một dự án React Native mới. Yêu cảm giác flow khi mọi thứ đều ăn khớp! #lap_trinh #reactnative #ca_phe #hieu_qua',
+    likes: ['3', '5'],
+    comments: [],
+    createdAt: new Date(2023, 5, 15, 9, 0).toISOString()
+  },
+  {
+    id: '7',
+    userId: '2',
+    displayName: 'Trần Thị Linh',
+    text: 'Cuộc phiêu lưu leo núi cuối tuần! 🥾 Khám phá được một thác nước ẩn tuyệt đẹp sau 3 tiếng leo núi. Thiên nhiên luôn làm mình kinh ngạc. #leo_nui #thien_nhien #phieu_luu #cuoi_tuan',
+    likes: ['1', '4'],
+    comments: [
+      {
+        id: '701',
+        userId: '1',
+        displayName: 'Nguyễn Văn Minh',
+        text: 'Nghe tuyệt vời quá! Chỗ này ở đâu vậy bạn?',
+        parentCommentId: null,
+        replies: [],
+        createdAt: new Date(2023, 5, 15, 16, 20).toISOString()
+      }
+    ],
+    createdAt: new Date(2023, 5, 15, 15, 30).toISOString()
   }
 ];
 
 // Hàm khởi tạo dữ liệu mẫu
 export const initializeMockData = async () => {
   try {
-    // Kiểm tra xem dữ liệu đã tồn tại chưa
-    const usersJson = await AsyncStorage.getItem(USERS_KEY);
-    const postsJson = await AsyncStorage.getItem(POSTS_KEY);
-    
-    // Chỉ khởi tạo nếu dữ liệu chưa tồn tại
-    if (!usersJson) {
-      await AsyncStorage.setItem(USERS_KEY, JSON.stringify(sampleUsers));
-      console.log('Đã khởi tạo dữ liệu người dùng mẫu');
-    }
-    
-    if (!postsJson) {
-      await AsyncStorage.setItem(POSTS_KEY, JSON.stringify(samplePosts));
-      console.log('Đã khởi tạo dữ liệu bài đăng mẫu');
-    }
-    
+    // Xóa dữ liệu cũ và khởi tạo lại với dữ liệu mới
+    await AsyncStorage.removeItem(USERS_KEY);
+    await AsyncStorage.removeItem(POSTS_KEY);
+    await AsyncStorage.removeItem(CURRENT_USER_KEY);
+
+    // Khởi tạo dữ liệu mới
+    await AsyncStorage.setItem(USERS_KEY, JSON.stringify(sampleUsers));
+    await AsyncStorage.setItem(POSTS_KEY, JSON.stringify(samplePosts));
+
+    console.log('Đã khởi tạo lại dữ liệu mẫu mới');
     return true;
   } catch (error) {
     console.error('Lỗi khi khởi tạo dữ liệu mẫu:', error);

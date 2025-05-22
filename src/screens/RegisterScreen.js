@@ -25,37 +25,37 @@ const RegisterScreen = ({ navigation }) => {
   const { register } = useAuth();
   const { theme } = useTheme();
 
-  // Fill form with demo data
+  // Điền dữ liệu demo
   const fillDemoData = () => {
-    setDisplayName('Demo User');
+    setDisplayName('Người dùng Demo');
     setEmail('demo@example.com');
     setPassword('demo123');
     setConfirmPassword('demo123');
   };
 
   const handleRegister = async () => {
-    // Validate inputs
+    // Kiểm tra các trường đã được nhập đầy đủ chưa
     if (!email || !password || !confirmPassword || !displayName) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin');
       return;
     }
 
-    // Email validation
+    // Kiểm tra định dạng email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      Alert.alert('Lỗi', 'Vui lòng nhập đúng định dạng email');
       return;
     }
 
-    // Password validation
+    // Kiểm tra độ dài mật khẩu
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
+      Alert.alert('Lỗi', 'Mật khẩu phải có ít nhất 6 ký tự');
       return;
     }
 
-    // Confirm password
+    // Kiểm tra xác nhận mật khẩu
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert('Lỗi', 'Mật khẩu xác nhận không khớp');
       return;
     }
 
@@ -63,19 +63,19 @@ const RegisterScreen = ({ navigation }) => {
 
     try {
       await register(email, password, displayName);
-      // Navigation is handled by the AuthContext
+      // Việc điều hướng sẽ được xử lý bởi AuthContext
     } catch (error) {
-      let errorMessage = 'An error occurred during registration';
+      let errorMessage = 'Đã xảy ra lỗi trong quá trình đăng ký';
 
       if (error.message.includes('email-already-in-use') || error.message.includes('Email already in use')) {
-        errorMessage = 'This email is already registered. Please use a different email or login.';
+        errorMessage = 'Email này đã được đăng ký. Vui lòng sử dụng email khác hoặc đăng nhập.';
       } else if (error.message.includes('invalid-email')) {
-        errorMessage = 'Invalid email format.';
+        errorMessage = 'Định dạng email không hợp lệ.';
       } else if (error.message.includes('weak-password')) {
-        errorMessage = 'Password is too weak. Please use a stronger password.';
+        errorMessage = 'Mật khẩu quá yếu. Vui lòng sử dụng mật khẩu mạnh hơn.';
       }
 
-      Alert.alert('Registration Failed', errorMessage);
+      Alert.alert('Đăng ký thất bại', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -88,8 +88,8 @@ const RegisterScreen = ({ navigation }) => {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text }]}>Create Account</Text>
-          <Text style={[styles.subtitle, { color: theme.placeholder }]}>Join our community today</Text>
+          <Text style={[styles.title, { color: theme.text }]}>Tạo tài khoản</Text>
+          <Text style={[styles.subtitle, { color: theme.placeholder }]}>Tham gia cộng đồng của chúng tôi ngay hôm nay</Text>
         </View>
 
         <View style={styles.form}>
@@ -97,7 +97,7 @@ const RegisterScreen = ({ navigation }) => {
             <Ionicons name="person-outline" size={20} color={theme.placeholder} style={styles.inputIcon} />
             <TextInput
               style={[styles.input, { color: theme.text }]}
-              placeholder="Display Name"
+              placeholder="Tên hiển thị"
               placeholderTextColor={theme.placeholder}
               value={displayName}
               onChangeText={setDisplayName}
@@ -121,7 +121,7 @@ const RegisterScreen = ({ navigation }) => {
             <Ionicons name="lock-closed-outline" size={20} color={theme.placeholder} style={styles.inputIcon} />
             <TextInput
               style={[styles.input, { color: theme.text }]}
-              placeholder="Password"
+              placeholder="Mật khẩu"
               placeholderTextColor={theme.placeholder}
               value={password}
               onChangeText={setPassword}
@@ -140,7 +140,7 @@ const RegisterScreen = ({ navigation }) => {
             <Ionicons name="lock-closed-outline" size={20} color={theme.placeholder} style={styles.inputIcon} />
             <TextInput
               style={[styles.input, { color: theme.text }]}
-              placeholder="Confirm Password"
+              placeholder="Xác nhận mật khẩu"
               placeholderTextColor={theme.placeholder}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
@@ -154,7 +154,7 @@ const RegisterScreen = ({ navigation }) => {
             disabled={loading}
           >
             <Text style={styles.buttonText}>
-              {loading ? 'Creating Account...' : 'Register'}
+              {loading ? 'Đang tạo tài khoản...' : 'Đăng ký'}
             </Text>
           </TouchableOpacity>
 
@@ -163,17 +163,17 @@ const RegisterScreen = ({ navigation }) => {
             onPress={fillDemoData}
           >
             <Text style={[styles.demoButtonText, { color: theme.primary }]}>
-              Use Demo Data
+              Sử dụng dữ liệu Demo
             </Text>
           </TouchableOpacity>
 
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: theme.placeholder }]}>
-              Already have an account?
+              Đã có tài khoản?
             </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
               <Text style={[styles.footerLink, { color: theme.primary }]}>
-                Login
+                Đăng nhập
               </Text>
             </TouchableOpacity>
           </View>
@@ -235,6 +235,18 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  demoButton: {
+    height: 50,
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  demoButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
   },

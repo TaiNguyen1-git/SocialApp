@@ -12,10 +12,13 @@ import ProfileScreen from '../screens/ProfileScreen';
 import CreatePostScreen from '../screens/CreatePostScreen';
 import PostDetailScreen from '../screens/PostDetailScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import NotificationScreen from '../screens/NotificationScreen';
+import SearchScreen from '../screens/SearchScreen';
 
 // Import các context
 import { useAuth } from '../utils/AuthContext';
 import { useTheme } from '../utils/ThemeContext';
+import { useNotifications } from '../utils/NotificationContext';
 
 // Tạo các navigator
 const Stack = createStackNavigator();
@@ -39,8 +42,16 @@ const AuthNavigator = () => {
         },
       }}
     >
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{ title: 'Đăng nhập' }}
+      />
+      <Stack.Screen
+        name="Register"
+        component={RegisterScreen}
+        options={{ title: 'Đăng ký' }}
+      />
     </Stack.Navigator>
   );
 };
@@ -50,6 +61,7 @@ const AuthNavigator = () => {
  */
 const MainTabNavigator = () => {
   const { theme } = useTheme();
+  const { unreadCount } = useNotifications();
 
   return (
     <Tab.Navigator
@@ -60,12 +72,14 @@ const MainTabNavigator = () => {
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'Search') {
+            iconName = focused ? 'search' : 'search-outline';
           } else if (route.name === 'Create') {
             iconName = focused ? 'add-circle' : 'add-circle-outline';
-          } else if (route.name === 'Settings') {
-            iconName = focused ? 'settings' : 'settings-outline';
+          } else if (route.name === 'Notifications') {
+            iconName = focused ? 'notifications' : 'notifications-outline';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -87,10 +101,39 @@ const MainTabNavigator = () => {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Create" component={CreatePostScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ title: 'Trang chủ' }}
+      />
+      <Tab.Screen
+        name="Search"
+        component={SearchScreen}
+        options={{ title: 'Tìm kiếm' }}
+      />
+      <Tab.Screen
+        name="Create"
+        component={CreatePostScreen}
+        options={{ title: 'Tạo bài' }}
+      />
+      <Tab.Screen
+        name="Notifications"
+        component={NotificationScreen}
+        options={{
+          title: 'Thông báo',
+          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: '#e74c3c',
+            color: 'white',
+            fontSize: 10,
+          }
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: 'Hồ sơ' }}
+      />
     </Tab.Navigator>
   );
 };
@@ -118,7 +161,16 @@ const MainStackNavigator = () => {
         component={MainTabNavigator}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="PostDetail" component={PostDetailScreen} />
+      <Stack.Screen
+        name="PostDetail"
+        component={PostDetailScreen}
+        options={{ title: 'Chi tiết bài đăng' }}
+      />
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ title: 'Cài đặt' }}
+      />
     </Stack.Navigator>
   );
 };

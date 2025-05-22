@@ -29,7 +29,24 @@ const Post = ({ item, onLike, onComment, onPress, currentUserId, theme }) => {
   // Kiểm tra xem người dùng hiện tại đã thích bài đăng chưa
   const isLiked = item.likes && item.likes.includes(currentUserId);
   const likeCount = item.likes ? item.likes.length : 0;
-  const commentCount = item.comments ? item.comments.length : 0;
+
+  // Tính tổng số comment bao gồm cả replies
+  const getTotalCommentCount = (comments) => {
+    if (!comments || comments.length === 0) return 0;
+
+    let total = comments.length; // Đếm comment gốc
+
+    // Đếm thêm replies
+    comments.forEach(comment => {
+      if (comment.replies && comment.replies.length > 0) {
+        total += comment.replies.length;
+      }
+    });
+
+    return total;
+  };
+
+  const commentCount = getTotalCommentCount(item.comments);
 
   // Định dạng ngày tháng
   const formatDate = (dateString) => {
@@ -63,7 +80,7 @@ const Post = ({ item, onLike, onComment, onPress, currentUserId, theme }) => {
       </View>
 
       {/* Nội dung bài đăng */}
-      <Text style={[styles.postText, { color: theme.text }]}>{item.text}</Text>
+      <Text style={[styles.postText, { color: theme.text, marginBottom: item.imageUrl ? 4 : 2 }]}>{item.text}</Text>
 
       {/* Hình ảnh bài đăng (nếu có) */}
       {item.imageUrl && (
@@ -71,7 +88,10 @@ const Post = ({ item, onLike, onComment, onPress, currentUserId, theme }) => {
       )}
 
       {/* Phần tương tác (thích, bình luận) */}
-      <View style={styles.postActions}>
+      <View style={[
+        styles.postActions,
+        { marginTop: item.imageUrl ? 2 : 2 }
+      ]}>
         {/* Nút thích */}
         <TouchableOpacity
           style={styles.actionButton}
@@ -108,23 +128,82 @@ const HomeScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   // State để theo dõi trạng thái đang làm mới
   const [refreshing, setRefreshing] = useState(false);
+  // State để theo dõi trạng thái đang tải thêm
+  const [loadingMore, setLoadingMore] = useState(false);
+  // State để lưu trữ thông tin phân trang
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    hasMore: false
+  });
 
   // Lấy thông tin người dùng hiện tại từ AuthContext
   const { user } = useAuth();
   // Lấy chủ đề hiện tại từ ThemeContext
   const { theme } = useTheme();
 
-  // Hàm lấy danh sách bài đăng
+  // Tất cả bài đăng từ storage
+  const [allPosts, setAllPosts] = useState([]);
+
+  // Số lượng bài đăng mỗi trang
+  const POSTS_PER_PAGE = 5;
+
+  // Hàm lấy danh sách bài đăng (trang đầu tiên)
   const fetchPosts = async () => {
     try {
       setLoading(true);
+      // Lấy tất cả bài đăng
       const fetchedPosts = await LocalStorage.getPosts();
-      setPosts(fetchedPosts);
+      setAllPosts(fetchedPosts);
+
+      // Lấy bài đăng cho trang đầu tiên
+      const postsForFirstPage = fetchedPosts.slice(0, POSTS_PER_PAGE);
+      setPosts(postsForFirstPage);
+
+      // Cập nhật thông tin phân trang
+      setPagination({
+        currentPage: 1,
+        totalPages: Math.ceil(fetchedPosts.length / POSTS_PER_PAGE),
+        totalPosts: fetchedPosts.length,
+        hasMore: fetchedPosts.length > POSTS_PER_PAGE
+      });
     } catch (error) {
       console.error('Lỗi khi lấy danh sách bài đăng:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  // Hàm tải thêm bài đăng (trang tiếp theo)
+  const loadMorePosts = () => {
+    // Nếu đang tải hoặc không còn bài đăng để tải, không làm gì cả
+    if (loadingMore || !pagination.hasMore) return;
+
+    try {
+      setLoadingMore(true);
+
+      // Tính toán vị trí bắt đầu và kết thúc cho trang tiếp theo
+      const nextPage = pagination.currentPage + 1;
+      const startIndex = (nextPage - 1) * POSTS_PER_PAGE;
+      const endIndex = nextPage * POSTS_PER_PAGE;
+
+      // Lấy bài đăng cho trang tiếp theo
+      const postsForNextPage = allPosts.slice(startIndex, endIndex);
+
+      // Thêm bài đăng mới vào danh sách hiện tại
+      setPosts(prevPosts => [...prevPosts, ...postsForNextPage]);
+
+      // Cập nhật thông tin phân trang
+      setPagination(prev => ({
+        ...prev,
+        currentPage: nextPage,
+        hasMore: endIndex < allPosts.length
+      }));
+    } catch (error) {
+      console.error('Lỗi khi tải thêm bài đăng:', error);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -237,6 +316,30 @@ const HomeScreen = ({ navigation }) => {
             />
           }
           ListEmptyComponent={renderEmptyComponent}
+          onEndReached={loadMorePosts}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={styles.loadingMoreContainer}>
+                <ActivityIndicator size="small" color={theme.primary} />
+                <Text style={[styles.loadingMoreText, { color: theme.placeholder }]}>
+                  Đang tải thêm bài viết...
+                </Text>
+              </View>
+            ) : pagination.hasMore ? (
+              <View style={styles.loadingMoreContainer}>
+                <Text style={[styles.loadingMoreText, { color: theme.placeholder }]}>
+                  Kéo xuống để tải thêm
+                </Text>
+              </View>
+            ) : posts.length > 0 ? (
+              <View style={styles.loadingMoreContainer}>
+                <Text style={[styles.loadingMoreText, { color: theme.placeholder }]}>
+                  Đã hiển thị tất cả bài viết
+                </Text>
+              </View>
+            ) : null
+          }
         />
       )}
     </View>
@@ -258,65 +361,103 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   postContainer: {
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
-    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
+    borderWidth: 0.5,
+    overflow: 'hidden',
   },
   postHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   postUser: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: 8,
   },
   avatarText: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   userName: {
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 15,
   },
   postTime: {
-    fontSize: 12,
+    fontSize: 11,
+    marginTop: 1,
+  },
+  postContent: {
+    marginBottom: 0,
   },
   postText: {
-    fontSize: 16,
-    marginBottom: 10,
+    fontSize: 15,
+    marginBottom: 0,
+    lineHeight: 20,
   },
   postImage: {
     width: '100%',
-    height: 200,
-    borderRadius: 10,
-    marginBottom: 10,
+    height: 180,
+    borderRadius: 4,
+    marginBottom: 0,
+  },
+  countsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 0,
+    minHeight: 14,
+  },
+  countItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  countIcon: {
+    marginRight: 4,
+  },
+  countText: {
+    fontSize: 12,
   },
   postActions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 10,
+    borderTopWidth: 0.5,
+    paddingTop: 2,
+    paddingHorizontal: 5,
+    marginTop: 0,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
   },
   actionText: {
-    marginLeft: 5,
+    marginLeft: 4,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  // Animation styles
+  actionButtonAnimating: {
+    transform: [{ scale: 1.05 }],
+  },
+  likeIconAnimating: {
+    transform: [{ scale: 1.3 }],
+  },
+  actionTextAnimating: {
+    fontWeight: 'bold',
   },
   emptyContainer: {
     alignItems: 'center',
@@ -332,6 +473,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     marginTop: 10,
+  },
+  loadingMoreContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  loadingMoreText: {
+    fontSize: 14,
+    marginTop: 5,
   },
 });
 

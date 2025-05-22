@@ -59,7 +59,7 @@ const ProfileScreen = ({ navigation }) => {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'We need camera roll permissions to change your avatar.');
+        Alert.alert('Quyền bị từ chối', 'Chúng tôi cần quyền truy cập thư viện ảnh để thay đổi ảnh đại diện.');
         return;
       }
 
@@ -81,17 +81,17 @@ const ProfileScreen = ({ navigation }) => {
           // Update user avatar
           await updateAvatar(avatarUrl);
 
-          Alert.alert('Success', 'Avatar updated successfully!');
+          Alert.alert('Thành công', 'Ảnh đại diện đã được cập nhật!');
         } catch (error) {
           console.error('Error updating avatar:', error);
-          Alert.alert('Error', 'Failed to update avatar. Please try again.');
+          Alert.alert('Lỗi', 'Không thể cập nhật ảnh đại diện. Vui lòng thử lại.');
         } finally {
           setChangingAvatar(false);
         }
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
+      Alert.alert('Lỗi', 'Không thể chọn hình ảnh. Vui lòng thử lại.');
     }
   };
 
@@ -138,15 +138,15 @@ const ProfileScreen = ({ navigation }) => {
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
       <Ionicons name="images-outline" size={80} color={theme.placeholder} />
-      <Text style={[styles.emptyText, { color: theme.text }]}>No posts yet</Text>
+      <Text style={[styles.emptyText, { color: theme.text }]}>Chưa có bài đăng nào</Text>
       <Text style={[styles.emptySubtext, { color: theme.placeholder }]}>
-        Your posts will appear here
+        Các bài đăng của bạn sẽ xuất hiện ở đây
       </Text>
       <TouchableOpacity
         style={[styles.createButton, { backgroundColor: theme.primary }]}
         onPress={() => navigation.navigate('Create')}
       >
-        <Text style={styles.createButtonText}>Create Post</Text>
+        <Text style={styles.createButtonText}>Tạo bài đăng</Text>
       </TouchableOpacity>
     </View>
   );
@@ -154,6 +154,14 @@ const ProfileScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.profileHeader, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        {/* Settings button */}
+        <TouchableOpacity
+          style={[styles.settingsButton, { backgroundColor: theme.background }]}
+          onPress={() => navigation.navigate('Settings')}
+        >
+          <Ionicons name="settings-outline" size={24} color={theme.text} />
+        </TouchableOpacity>
+
         <View style={styles.profileInfo}>
           <TouchableOpacity
             style={styles.avatarContainer}
@@ -189,14 +197,14 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.stats}>
           <View style={styles.statItem}>
             <Text style={[styles.statNumber, { color: theme.text }]}>{userPosts.length}</Text>
-            <Text style={[styles.statLabel, { color: theme.placeholder }]}>Posts</Text>
+            <Text style={[styles.statLabel, { color: theme.placeholder }]}>Bài đăng</Text>
           </View>
         </View>
       </View>
 
       <View style={styles.postsContainer}>
         <View style={[styles.postsHeader, { borderBottomColor: theme.border }]}>
-          <Text style={[styles.postsTitle, { color: theme.text }]}>My Posts</Text>
+          <Text style={[styles.postsTitle, { color: theme.text }]}>Bài đăng của tôi</Text>
         </View>
 
         {loading && !refreshing ? (
@@ -228,6 +236,18 @@ const styles = StyleSheet.create({
   profileHeader: {
     padding: 20,
     borderBottomWidth: 1,
+    position: 'relative',
+  },
+  settingsButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
   },
   profileInfo: {
     flexDirection: 'row',

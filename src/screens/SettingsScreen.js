@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../utils/AuthContext';
 import { useTheme } from '../utils/ThemeContext';
+import { testNotificationSystem } from '../utils/testNotification';
 
 const SettingsScreen = () => {
   const { logout, user } = useAuth();
@@ -22,22 +23,22 @@ const SettingsScreen = () => {
       await logout();
     } catch (error) {
       console.error('Error logging out:', error);
-      Alert.alert('Error', 'Failed to log out. Please try again.');
+      Alert.alert('Lỗi', 'Không thể đăng xuất. Vui lòng thử lại.');
     }
   };
 
   // Confirm logout
   const confirmLogout = () => {
     Alert.alert(
-      'Logout',
-      'Are you sure you want to log out?',
+      'Đăng xuất',
+      'Bạn có chắc chắn muốn đăng xuất?',
       [
         {
-          text: 'Cancel',
+          text: 'Hủy',
           style: 'cancel',
         },
         {
-          text: 'Logout',
+          text: 'Đăng xuất',
           onPress: handleLogout,
           style: 'destructive',
         },
@@ -45,17 +46,27 @@ const SettingsScreen = () => {
     );
   };
 
+  // Test notification system
+  const handleTestNotifications = async () => {
+    try {
+      await testNotificationSystem();
+      Alert.alert('Test hoàn thành', 'Kiểm tra console logs để xem kết quả');
+    } catch (error) {
+      Alert.alert('Test thất bại', error.message);
+    }
+  };
+
 
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.text }]}>Account</Text>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>Tài khoản</Text>
 
         <View style={[styles.settingItem, { borderBottomColor: theme.border }]}>
           <View style={styles.settingInfo}>
             <Ionicons name="person-outline" size={22} color={theme.primary} style={styles.settingIcon} />
-            <Text style={[styles.settingLabel, { color: theme.text }]}>Name</Text>
+            <Text style={[styles.settingLabel, { color: theme.text }]}>Tên</Text>
           </View>
           <Text style={[styles.settingValue, { color: theme.placeholder }]}>{user.displayName}</Text>
         </View>
@@ -70,7 +81,7 @@ const SettingsScreen = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.text }]}>Appearance</Text>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>Giao diện</Text>
 
         <View style={[styles.settingItem, { borderBottomColor: theme.border }]}>
           <View style={styles.settingInfo}>
@@ -80,7 +91,7 @@ const SettingsScreen = () => {
               color={theme.primary}
               style={styles.settingIcon}
             />
-            <Text style={[styles.settingLabel, { color: theme.text }]}>Dark Mode</Text>
+            <Text style={[styles.settingLabel, { color: theme.text }]}>Chế độ tối</Text>
           </View>
           <Switch
             value={isDark}
@@ -94,15 +105,30 @@ const SettingsScreen = () => {
 
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.text }]}>About</Text>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>Thông tin</Text>
 
         <View style={[styles.settingItem, { borderBottomColor: theme.border }]}>
           <View style={styles.settingInfo}>
             <Ionicons name="information-circle-outline" size={22} color={theme.primary} style={styles.settingIcon} />
-            <Text style={[styles.settingLabel, { color: theme.text }]}>Version</Text>
+            <Text style={[styles.settingLabel, { color: theme.text }]}>Phiên bản</Text>
           </View>
           <Text style={[styles.settingValue, { color: theme.placeholder }]}>1.0.0</Text>
         </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>Debug</Text>
+
+        <TouchableOpacity
+          style={[styles.settingItem, { borderBottomColor: theme.border }]}
+          onPress={handleTestNotifications}
+        >
+          <View style={styles.settingInfo}>
+            <Ionicons name="bug-outline" size={22} color={theme.primary} style={styles.settingIcon} />
+            <Text style={[styles.settingLabel, { color: theme.text }]}>Test Notifications</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={theme.placeholder} />
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity
@@ -110,7 +136,7 @@ const SettingsScreen = () => {
         onPress={confirmLogout}
       >
         <Ionicons name="log-out-outline" size={22} color="white" style={styles.logoutIcon} />
-        <Text style={styles.logoutText}>Logout</Text>
+        <Text style={styles.logoutText}>Đăng xuất</Text>
       </TouchableOpacity>
     </ScrollView>
   );

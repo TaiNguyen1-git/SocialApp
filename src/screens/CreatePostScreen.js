@@ -33,7 +33,7 @@ const CreatePostScreen = ({ navigation }) => {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'We need camera roll permissions to upload images.');
+        Alert.alert('Quyền bị từ chối', 'Chúng tôi cần quyền truy cập thư viện ảnh để tải lên hình ảnh.');
         return;
       }
 
@@ -50,7 +50,7 @@ const CreatePostScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
+      Alert.alert('Lỗi', 'Không thể chọn hình ảnh. Vui lòng thử lại.');
     }
   };
 
@@ -61,7 +61,7 @@ const CreatePostScreen = ({ navigation }) => {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
 
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'We need camera permissions to take photos.');
+        Alert.alert('Quyền bị từ chối', 'Chúng tôi cần quyền truy cập camera để chụp ảnh.');
         return;
       }
 
@@ -77,7 +77,7 @@ const CreatePostScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error taking photo:', error);
-      Alert.alert('Error', 'Failed to take photo. Please try again.');
+      Alert.alert('Lỗi', 'Không thể chụp ảnh. Vui lòng thử lại.');
     }
   };
 
@@ -85,7 +85,7 @@ const CreatePostScreen = ({ navigation }) => {
   const createPost = async () => {
     // Validate inputs
     if (!text && !image) {
-      Alert.alert('Error', 'Please add some text or an image to your post.');
+      Alert.alert('Lỗi', 'Vui lòng thêm văn bản hoặc hình ảnh vào bài đăng của bạn.');
       return;
     }
 
@@ -111,10 +111,10 @@ const CreatePostScreen = ({ navigation }) => {
       navigation.navigate('Home');
 
       // Show success message
-      Alert.alert('Success', 'Your post has been created!');
+      Alert.alert('Thành công', 'Bài đăng của bạn đã được tạo!');
     } catch (error) {
       console.error('Error creating post:', error);
-      Alert.alert('Error', 'Failed to create post. Please try again.');
+      Alert.alert('Lỗi', 'Không thể tạo bài đăng. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -127,13 +127,13 @@ const CreatePostScreen = ({ navigation }) => {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text }]}>Create Post</Text>
+          <Text style={[styles.title, { color: theme.text }]}>Tạo bài đăng</Text>
         </View>
 
         <View style={styles.form}>
           <TextInput
             style={[styles.textInput, { color: theme.text, backgroundColor: theme.card, borderColor: theme.border }]}
-            placeholder="What's on your mind?"
+            placeholder="Bạn đang nghĩ gì?"
             placeholderTextColor={theme.placeholder}
             value={text}
             onChangeText={setText}
@@ -160,7 +160,7 @@ const CreatePostScreen = ({ navigation }) => {
               onPress={pickImage}
             >
               <Ionicons name="images-outline" size={24} color={theme.primary} />
-              <Text style={[styles.imageButtonText, { color: theme.text }]}>Gallery</Text>
+              <Text style={[styles.imageButtonText, { color: theme.text }]}>Thư viện</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -182,7 +182,7 @@ const CreatePostScreen = ({ navigation }) => {
             ) : (
               <>
                 <Ionicons name="send" size={20} color="white" style={styles.buttonIcon} />
-                <Text style={styles.buttonText}>Post</Text>
+                <Text style={styles.buttonText}>Đăng bài</Text>
               </>
             )}
           </TouchableOpacity>
