@@ -108,6 +108,48 @@ export const NotificationProvider = ({ children }) => {
   };
 
   /**
+   * Xóa một thông báo
+   * @param {string} notificationId - ID của thông báo cần xóa
+   */
+  const clearNotification = async (notificationId) => {
+    try {
+      await LocalStorage.deleteNotification(notificationId);
+
+      // Cập nhật state local
+      setNotifications(prev => {
+        const updatedNotifications = prev.filter(n => n.id !== notificationId);
+
+        // Cập nhật unread count
+        const deletedNotification = prev.find(n => n.id === notificationId);
+        if (deletedNotification && !deletedNotification.isRead) {
+          setUnreadCount(prevCount => Math.max(0, prevCount - 1));
+        }
+
+        return updatedNotifications;
+      });
+    } catch (error) {
+      console.error('Lỗi khi xóa thông báo:', error);
+    }
+  };
+
+  /**
+   * Xóa tất cả thông báo
+   */
+  const clearAllNotifications = async () => {
+    if (!user) return;
+
+    try {
+      await LocalStorage.clearAllNotifications(user.id);
+
+      // Cập nhật state local
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Lỗi khi xóa tất cả thông báo:', error);
+    }
+  };
+
+  /**
    * Thêm thông báo mới (được gọi từ các action khác)
    * @param {string} userId - ID người nhận
    * @param {string} type - Loại thông báo
@@ -134,6 +176,8 @@ export const NotificationProvider = ({ children }) => {
     loading,
     markAsRead,
     markAllAsRead,
+    clearNotification,
+    clearAllNotifications,
     refreshNotifications,
     addNotification
   };

@@ -16,15 +16,8 @@ import { useAuth } from '../utils/AuthContext';
 import { useTheme } from '../utils/ThemeContext';
 import * as LocalStorage from '../services/localStorage';
 
-/**
- * Component hiển thị một bài đăng
- * @param {Object} item - Dữ liệu bài đăng
- * @param {Function} onLike - Hàm xử lý khi nhấn nút thích
- * @param {Function} onComment - Hàm xử lý khi nhấn nút bình luận
- * @param {Function} onPress - Hàm xử lý khi nhấn vào bài đăng
- * @param {string} currentUserId - ID của người dùng hiện tại
- * @param {Object} theme - Chủ đề hiện tại
- */
+// ==================== POST COMPONENT ====================
+
 const Post = ({ item, onLike, onComment, onPress, currentUserId, theme }) => {
   // Kiểm tra xem người dùng hiện tại đã thích bài đăng chưa
   const isLiked = item.likes && item.likes.includes(currentUserId);
@@ -118,37 +111,30 @@ const Post = ({ item, onLike, onComment, onPress, currentUserId, theme }) => {
   );
 };
 
-/**
- * Màn hình trang chủ hiển thị danh sách bài đăng
- */
+// ==================== MAIN COMPONENT ====================
+
 const HomeScreen = ({ navigation }) => {
-  // State để lưu trữ danh sách bài đăng
+  // ==================== CONSTANTS ====================
+  const POSTS_PER_PAGE = 5;
+
+  // ==================== STATE MANAGEMENT ====================
   const [posts, setPosts] = useState([]);
-  // State để theo dõi trạng thái đang tải
   const [loading, setLoading] = useState(true);
-  // State để theo dõi trạng thái đang làm mới
   const [refreshing, setRefreshing] = useState(false);
-  // State để theo dõi trạng thái đang tải thêm
   const [loadingMore, setLoadingMore] = useState(false);
-  // State để lưu trữ thông tin phân trang
+  const [allPosts, setAllPosts] = useState([]);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     hasMore: false
   });
 
-  // Lấy thông tin người dùng hiện tại từ AuthContext
+  // ==================== HOOKS ====================
   const { user } = useAuth();
-  // Lấy chủ đề hiện tại từ ThemeContext
   const { theme } = useTheme();
 
-  // Tất cả bài đăng từ storage
-  const [allPosts, setAllPosts] = useState([]);
+  // ==================== DATA FUNCTIONS ====================
 
-  // Số lượng bài đăng mỗi trang
-  const POSTS_PER_PAGE = 5;
-
-  // Hàm lấy danh sách bài đăng (trang đầu tiên)
   const fetchPosts = async () => {
     try {
       setLoading(true);
@@ -207,7 +193,8 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  // Lấy danh sách bài đăng khi component được tạo
+  // ==================== EFFECTS ====================
+
   useEffect(() => {
     fetchPosts();
   }, []);
@@ -219,7 +206,8 @@ const HomeScreen = ({ navigation }) => {
     }, [])
   );
 
-  // Xử lý khi người dùng kéo xuống để làm mới
+  // ==================== EVENT HANDLERS ====================
+
   const onRefresh = () => {
     setRefreshing(true);
     fetchPosts();
@@ -273,7 +261,8 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate('PostDetail', { post });
   };
 
-  // Component hiển thị khi không có bài đăng nào
+  // ==================== RENDER FUNCTIONS ====================
+
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
       <Ionicons name="images-outline" size={80} color={theme.placeholder} />
@@ -346,7 +335,8 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
-// Định nghĩa styles
+// ==================== STYLES ====================
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from './src/utils/AuthContext';
 import { ThemeProvider } from './src/utils/ThemeContext';
 import { NotificationProvider } from './src/utils/NotificationContext';
+import { ChatProvider } from './src/utils/ChatContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { initializeMockData } from './src/data/mockData';
 
@@ -33,8 +34,11 @@ export default function App() {
           <ThemeProvider>
             {/* NotificationProvider quản lý thông báo */}
             <NotificationProvider>
-              {/* AppNavigator xử lý điều hướng trong ứng dụng */}
-              <AppNavigator />
+              {/* ChatProvider quản lý chat real-time */}
+              <ChatProvider>
+                {/* AppNavigator xử lý điều hướng trong ứng dụng */}
+                <AppNavigator />
+              </ChatProvider>
             </NotificationProvider>
           </ThemeProvider>
         </AuthProvider>

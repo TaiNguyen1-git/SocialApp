@@ -1,20 +1,21 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Các khóa để lưu trữ dữ liệu trong AsyncStorage
+// ==================== STORAGE KEYS ====================
 const USERS_KEY = '@SocialApp:users';
 const CURRENT_USER_KEY = '@SocialApp:currentUser';
 
-// Tạo context để quản lý trạng thái xác thực
+// ==================== CONTEXT SETUP ====================
 export const AuthContext = createContext();
 
+// ==================== PROVIDER COMPONENT ====================
+
 export const AuthProvider = ({ children }) => {
-  // State để lưu trữ thông tin người dùng hiện tại
+  // ==================== STATE MANAGEMENT ====================
   const [user, setUser] = useState(null);
-  // State để theo dõi trạng thái đang tải
   const [loading, setLoading] = useState(true);
 
-  // Kiểm tra xem người dùng đã đăng nhập chưa khi ứng dụng khởi động
+  // ==================== INITIALIZATION ====================
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -32,7 +33,8 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  // Hàm đăng ký người dùng mới
+  // ==================== AUTHENTICATION FUNCTIONS ====================
+
   const register = async (email, password, displayName) => {
     try {
       // Lấy danh sách người dùng hiện có
@@ -49,7 +51,7 @@ export const AuthProvider = ({ children }) => {
       const newUser = {
         id: Date.now().toString(),
         email,
-        password, // Trong ứng dụng thực tế, mật khẩu nên được mã hóa
+        password, 
         displayName,
         createdAt: new Date().toISOString()
       };
@@ -143,7 +145,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Cung cấp các giá trị và hàm cho context
+  // ==================== CONTEXT PROVIDER ====================
+
   return (
     <AuthContext.Provider
       value={{
@@ -160,7 +163,8 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Hook tùy chỉnh để sử dụng AuthContext
+// ==================== CUSTOM HOOK ====================
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

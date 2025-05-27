@@ -2,7 +2,8 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Định nghĩa chủ đề sáng
+// ==================== THEME DEFINITIONS ====================
+
 export const lightTheme = {
   mode: 'light',
   background: '#FFFFFF', // Màu nền
@@ -30,18 +31,20 @@ export const darkTheme = {
   placeholder: '#757575',
 };
 
-// Tạo context để quản lý chủ đề
+// ==================== CONTEXT SETUP ====================
+
 export const ThemeContext = createContext();
 
+// ==================== PROVIDER COMPONENT ====================
+
 export const ThemeProvider = ({ children }) => {
-  // Lấy chủ đề từ thiết bị
+  // ==================== STATE MANAGEMENT ====================
   const deviceTheme = useColorScheme();
-  // State để lưu trữ chủ đề hiện tại
   const [theme, setTheme] = useState(deviceTheme === 'dark' ? darkTheme : lightTheme);
-  // State để lưu trữ chế độ chủ đề ('system', 'light', hoặc 'dark')
   const [themeMode, setThemeMode] = useState('system');
 
-  // Tải tùy chọn chủ đề đã lưu
+  // ==================== INITIALIZATION ====================
+
   useEffect(() => {
     const loadThemePreference = async () => {
       try {
@@ -74,7 +77,8 @@ export const ThemeProvider = ({ children }) => {
     }
   }, [deviceTheme, themeMode]);
 
-  // Chuyển đổi giữa chủ đề sáng và tối
+  // ==================== THEME MANAGEMENT FUNCTIONS ====================
+
   const toggleTheme = async () => {
     try {
       const newThemeMode = theme.mode === 'light' ? 'dark' : 'light';
@@ -112,7 +116,8 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
-  // Cung cấp các giá trị và hàm cho context
+  // ==================== CONTEXT PROVIDER ====================
+
   return (
     <ThemeContext.Provider
       value={{
@@ -128,7 +133,8 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-// Hook tùy chỉnh để sử dụng ThemeContext
+// ==================== CUSTOM HOOK ====================
+
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {

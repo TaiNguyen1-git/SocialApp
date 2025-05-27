@@ -20,7 +20,7 @@ import { useNotifications } from '../utils/NotificationContext';
 import * as LocalStorage from '../services/localStorage';
 import { Vibration } from 'react-native';
 
-// Comment component với hỗ trợ reply
+// ==================== COMMENT COMPONENT ====================
 const Comment = ({ comment, theme, onReply, currentUserId, isExpanded, onToggleExpand, highlightCommentId, highlightReplyId }) => {
   const [showReplies, setShowReplies] = useState(isExpanded || false);
 
@@ -133,24 +133,28 @@ const Comment = ({ comment, theme, onReply, currentUserId, isExpanded, onToggleE
   );
 };
 
+// ==================== MAIN COMPONENT ====================
+
 const PostDetailScreen = ({ route }) => {
   const { post: initialPost, highlightCommentId, highlightReplyId } = route.params;
 
+  // ==================== STATE MANAGEMENT ====================
   const [post, setPost] = useState(initialPost);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [replyingTo, setReplyingTo] = useState(null); // Comment đang được reply
-  const [expandedComments, setExpandedComments] = useState(new Set()); // Comments có replies được mở
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [expandedComments, setExpandedComments] = useState(new Set());
 
+  // ==================== HOOKS ====================
   const { user } = useAuth();
   const { theme } = useTheme();
   const { refreshNotifications } = useNotifications();
 
-  // Check if post is liked by current user
+  // ==================== COMPUTED VALUES ====================
   const isLiked = post.likes && post.likes.includes(user?.id);
 
-  // Tính tổng số comment bao gồm cả replies
+  // ==================== UTILITY FUNCTIONS ====================
   const getTotalCommentCount = (comments) => {
     if (!comments || comments.length === 0) return 0;
 
@@ -166,7 +170,8 @@ const PostDetailScreen = ({ route }) => {
     return total;
   };
 
-  // Auto-expand comment khi có highlight từ notification
+  // ==================== EFFECTS ====================
+
   useEffect(() => {
     if (highlightCommentId) {
       setExpandedComments(prev => new Set([...prev, highlightCommentId]));
@@ -179,7 +184,8 @@ const PostDetailScreen = ({ route }) => {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
 
-  // Fetch updated post
+  // ==================== DATA FUNCTIONS ====================
+
   const fetchPost = async () => {
     try {
       setRefreshing(true);
@@ -197,7 +203,8 @@ const PostDetailScreen = ({ route }) => {
     }
   };
 
-  // Handle like
+  // ==================== INTERACTION HANDLERS ====================
+
   const handleLike = async () => {
     try {
       if (!user) return;
@@ -292,6 +299,8 @@ const PostDetailScreen = ({ route }) => {
       return newSet;
     });
   };
+
+  // ==================== RENDER ====================
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
@@ -418,6 +427,8 @@ const PostDetailScreen = ({ route }) => {
     </SafeAreaView>
   );
 };
+
+// ==================== STYLES ====================
 
 const styles = StyleSheet.create({
   safeArea: {

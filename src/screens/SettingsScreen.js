@@ -11,7 +11,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../utils/AuthContext';
 import { useTheme } from '../utils/ThemeContext';
-import { testNotificationSystem } from '../utils/testNotification';
 
 const SettingsScreen = () => {
   const { logout, user } = useAuth();
@@ -46,15 +45,7 @@ const SettingsScreen = () => {
     );
   };
 
-  // Test notification system
-  const handleTestNotifications = async () => {
-    try {
-      await testNotificationSystem();
-      Alert.alert('Test hoàn thành', 'Kiểm tra console logs để xem kết quả');
-    } catch (error) {
-      Alert.alert('Test thất bại', error.message);
-    }
-  };
+
 
 
 
@@ -116,20 +107,7 @@ const SettingsScreen = () => {
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.text }]}>Debug</Text>
 
-        <TouchableOpacity
-          style={[styles.settingItem, { borderBottomColor: theme.border }]}
-          onPress={handleTestNotifications}
-        >
-          <View style={styles.settingInfo}>
-            <Ionicons name="bug-outline" size={22} color={theme.primary} style={styles.settingIcon} />
-            <Text style={[styles.settingLabel, { color: theme.text }]}>Test Notifications</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={theme.placeholder} />
-        </TouchableOpacity>
-      </View>
 
       <TouchableOpacity
         style={[styles.logoutButton, { backgroundColor: theme.error }]}

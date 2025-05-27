@@ -1,10 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Các khóa để lưu trữ dữ liệu trong AsyncStorage
+// ==================== STORAGE KEYS ====================
 const USERS_KEY = '@SocialApp:users';
 const CURRENT_USER_KEY = '@SocialApp:currentUser';
 const POSTS_KEY = '@SocialApp:posts';
 const NOTIFICATIONS_KEY = '@SocialApp:notifications';
+
+// ==================== USER AUTHENTICATION FUNCTIONS ====================
 
 /**
  * Đăng ký người dùng mới
@@ -139,6 +141,8 @@ export const updateUserAvatar = async (userId, avatarUrl) => {
     throw error;
   }
 };
+
+// ==================== POST MANAGEMENT FUNCTIONS ====================
 
 /**
  * Tạo bài đăng mới
@@ -472,6 +476,48 @@ export const markNotificationAsRead = async (notificationId) => {
       }
       return notification;
     });
+
+    // Lưu danh sách thông báo đã cập nhật
+    await AsyncStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(updatedNotifications));
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Xóa một thông báo
+ * @param {string} notificationId - ID của thông báo cần xóa
+ */
+export const deleteNotification = async (notificationId) => {
+  try {
+    const notificationsJson = await AsyncStorage.getItem(NOTIFICATIONS_KEY);
+    const notifications = notificationsJson ? JSON.parse(notificationsJson) : [];
+
+    // Lọc bỏ thông báo cần xóa
+    const updatedNotifications = notifications.filter(notification =>
+      notification.id !== notificationId
+    );
+
+    // Lưu danh sách thông báo đã cập nhật
+    await AsyncStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(updatedNotifications));
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Xóa tất cả thông báo của một user
+ * @param {string} userId - ID của người dùng
+ */
+export const clearAllNotifications = async (userId) => {
+  try {
+    const notificationsJson = await AsyncStorage.getItem(NOTIFICATIONS_KEY);
+    const notifications = notificationsJson ? JSON.parse(notificationsJson) : [];
+
+    // Lọc bỏ tất cả thông báo của user này
+    const updatedNotifications = notifications.filter(notification =>
+      notification.userId !== userId
+    );
 
     // Lưu danh sách thông báo đã cập nhật
     await AsyncStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(updatedNotifications));

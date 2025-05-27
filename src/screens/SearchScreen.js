@@ -15,9 +15,7 @@ import { useAuth } from '../utils/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import * as LocalStorage from '../services/localStorage';
 
-/**
- * Component hiển thị một bài đăng trong kết quả tìm kiếm
- */
+// ==================== SEARCH ITEM COMPONENTS ====================
 const SearchPostItem = ({ post, onPress, theme }) => {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -69,9 +67,6 @@ const SearchPostItem = ({ post, onPress, theme }) => {
   );
 };
 
-/**
- * Component hiển thị một người dùng trong kết quả tìm kiếm
- */
 const SearchUserItem = ({ user, theme }) => {
   return (
     <View style={[styles.userItem, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -88,21 +83,23 @@ const SearchUserItem = ({ user, theme }) => {
   );
 };
 
-/**
- * Màn hình tìm kiếm
- */
+// ==================== MAIN COMPONENT ====================
+
 const SearchScreen = () => {
+  // ==================== HOOKS ====================
   const { theme } = useTheme();
   const navigation = useNavigation();
 
+  // ==================== STATE MANAGEMENT ====================
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [userResults, setUserResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('users'); // Mặc định hiển thị users trước
+  const [activeTab, setActiveTab] = useState('users');
   const [recentSearches, setRecentSearches] = useState([]);
 
-  // Load all users when component mounts
+  // ==================== EFFECTS ====================
+
   useEffect(() => {
     loadAllUsers();
   }, []);
@@ -122,9 +119,8 @@ const SearchScreen = () => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  /**
-   * Load tất cả người dùng khi không có search query
-   */
+  // ==================== DATA FUNCTIONS ====================
+
   const loadAllUsers = async () => {
     try {
       const users = await LocalStorage.searchUsers(''); // Empty query sẽ trả về tất cả users
@@ -163,25 +159,20 @@ const SearchScreen = () => {
     }
   };
 
-  /**
-   * Xử lý khi nhấn vào bài đăng
-   */
+  // ==================== EVENT HANDLERS ====================
+
   const handlePostPress = (post) => {
     navigation.navigate('PostDetail', { post });
   };
 
-  /**
-   * Xóa tìm kiếm
-   */
   const clearSearch = () => {
     setSearchQuery('');
     setSearchResults([]);
     setUserResults([]);
   };
 
-  /**
-   * Component hiển thị khi không có kết quả
-   */
+  // ==================== RENDER FUNCTIONS ====================
+
   const renderEmptyComponent = () => {
     if (loading) {
       return (
@@ -218,9 +209,6 @@ const SearchScreen = () => {
     );
   };
 
-  /**
-   * Render tab buttons
-   */
   const renderTabButtons = () => (
     <View style={[styles.tabContainer, { borderBottomColor: theme.border }]}>
       <TouchableOpacity
@@ -254,6 +242,8 @@ const SearchScreen = () => {
       </TouchableOpacity>
     </View>
   );
+
+  // ==================== MAIN RENDER ====================
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -303,6 +293,8 @@ const SearchScreen = () => {
     </View>
   );
 };
+
+// ==================== STYLES ====================
 
 const styles = StyleSheet.create({
   container: {

@@ -4,7 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
-// Import các màn hình
+// ==================== SCREEN IMPORTS ====================
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -14,19 +14,21 @@ import PostDetailScreen from '../screens/PostDetailScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import NotificationScreen from '../screens/NotificationScreen';
 import SearchScreen from '../screens/SearchScreen';
+import ChatListScreen from '../screens/ChatListScreen';
+import ChatScreen from '../screens/ChatScreen';
+import UserListScreen from '../screens/UserListScreen';
 
-// Import các context
+// ==================== CONTEXT IMPORTS ====================
 import { useAuth } from '../utils/AuthContext';
 import { useTheme } from '../utils/ThemeContext';
 import { useNotifications } from '../utils/NotificationContext';
 
-// Tạo các navigator
+// ==================== NAVIGATOR SETUP ====================
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-/**
- * Navigator cho phần xác thực (đăng nhập/đăng ký)
- */
+// ==================== AUTH NAVIGATOR ====================
+
 const AuthNavigator = () => {
   const { theme } = useTheme();
 
@@ -56,9 +58,8 @@ const AuthNavigator = () => {
   );
 };
 
-/**
- * Navigator cho thanh tab chính
- */
+// ==================== MAIN TAB NAVIGATOR ====================
+
 const MainTabNavigator = () => {
   const { theme } = useTheme();
   const { unreadCount } = useNotifications();
@@ -76,6 +77,8 @@ const MainTabNavigator = () => {
             iconName = focused ? 'search' : 'search-outline';
           } else if (route.name === 'Create') {
             iconName = focused ? 'add-circle' : 'add-circle-outline';
+          } else if (route.name === 'Chat') {
+            iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
           } else if (route.name === 'Notifications') {
             iconName = focused ? 'notifications' : 'notifications-outline';
           } else if (route.name === 'Profile') {
@@ -117,6 +120,11 @@ const MainTabNavigator = () => {
         options={{ title: 'Tạo bài' }}
       />
       <Tab.Screen
+        name="Chat"
+        component={ChatListScreen}
+        options={{ title: 'Chat' }}
+      />
+      <Tab.Screen
         name="Notifications"
         component={NotificationScreen}
         options={{
@@ -138,9 +146,8 @@ const MainTabNavigator = () => {
   );
 };
 
-/**
- * Navigator chính bao gồm tabs và các màn hình khác
- */
+// ==================== MAIN STACK NAVIGATOR ====================
+
 const MainStackNavigator = () => {
   const { theme } = useTheme();
 
@@ -171,14 +178,25 @@ const MainStackNavigator = () => {
         component={SettingsScreen}
         options={{ title: 'Cài đặt' }}
       />
+      <Stack.Screen
+        name="ChatScreen"
+        component={ChatScreen}
+        options={({ route }) => ({
+          title: route.params?.username || 'Chat',
+          headerBackTitleVisible: false,
+        })}
+      />
+      <Stack.Screen
+        name="UserList"
+        component={UserListScreen}
+        options={{ title: 'Chọn người để chat' }}
+      />
     </Stack.Navigator>
   );
 };
 
-/**
- * Navigator gốc của ứng dụng
- * Quyết định hiển thị phần xác thực hoặc phần chính dựa vào trạng thái đăng nhập
- */
+// ==================== ROOT APP NAVIGATOR ====================
+
 const AppNavigator = () => {
   const { user, loading } = useAuth();
   const { theme } = useTheme();

@@ -14,10 +14,8 @@ import { useTheme } from '../utils/ThemeContext';
 import { useNotifications } from '../utils/NotificationContext';
 import { useNavigation } from '@react-navigation/native';
 
-/**
- * Component hiển thị một thông báo
- */
-const NotificationItem = ({ notification, onPress, onMarkAsRead, theme }) => {
+// ==================== NOTIFICATION ITEM COMPONENT ====================
+const NotificationItem = ({ notification, onPress, onMarkAsRead, onDelete, theme }) => {
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'like':
@@ -26,6 +24,8 @@ const NotificationItem = ({ notification, onPress, onMarkAsRead, theme }) => {
         return 'chatbubble';
       case 'reply':
         return 'chatbubble-outline';
+      case 'message':
+        return 'chatbubbles';
       default:
         return 'notifications';
     }
@@ -95,22 +95,35 @@ const NotificationItem = ({ notification, onPress, onMarkAsRead, theme }) => {
         </Text>
       </View>
 
-      {!notification.isRead && (
+      <View style={styles.notificationActions}>
+        {!notification.isRead && (
+          <TouchableOpacity
+            style={styles.markReadButton}
+            onPress={() => onMarkAsRead(notification.id)}
+          >
+            <View style={[styles.unreadDot, { backgroundColor: theme.primary }]} />
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
-          style={styles.markReadButton}
-          onPress={() => onMarkAsRead(notification.id)}
+          style={styles.deleteButton}
+          onPress={() => onDelete(notification.id)}
         >
-          <View style={[styles.unreadDot, { backgroundColor: theme.primary }]} />
+          <Ionicons
+            name="trash-outline"
+            size={18}
+            color={theme.placeholder}
+          />
         </TouchableOpacity>
-      )}
+      </View>
     </TouchableOpacity>
   );
 };
 
-/**
- * Màn hình hiển thị danh sách thông báo
- */
+// ==================== MAIN COMPONENT ====================
+
 const NotificationScreen = () => {
+  // ==================== HOOKS ====================
   const { theme } = useTheme();
   const navigation = useNavigation();
   const {
@@ -119,10 +132,13 @@ const NotificationScreen = () => {
     loading,
     markAsRead,
     markAllAsRead,
+    clearNotification,
+    clearAllNotifications,
     refreshNotifications
   } = useNotifications();
 
-  // Tải thông báo khi màn hình được focus
+  // ==================== EFFECTS ====================
+
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       refreshNotifications();
@@ -131,7 +147,8 @@ const NotificationScreen = () => {
     return unsubscribe;
   }, [navigation]);
 
-  // Xử lý khi nhấn vào thông báo
+  // ==================== EVENT HANDLERS ====================
+
   const handleNotificationPress = async (notification) => {
     // Đánh dấu đã đọc nếu chưa đọc
     if (!notification.isRead) {
@@ -139,7 +156,16 @@ const NotificationScreen = () => {
     }
 
     // Điều hướng dựa trên loại thông báo
-    if (notification.data?.postId) {
+    if (notification.type === 'message') {
+      // Xử lý thông báo chat
+      if (notification.data?.senderId && notification.data?.senderName) {
+        navigation.navigate('ChatScreen', {
+          userId: notification.data.senderId,
+          username: notification.data.senderName,
+          avatar: notification.data.avatar || null,
+        });
+      }
+    } else if (notification.data?.postId) {
       try {
         // Lấy thông tin chi tiết bài đăng từ storage
         const LocalStorage = require('../services/localStorage');
@@ -177,6 +203,25 @@ const NotificationScreen = () => {
     await markAsRead(notificationId);
   };
 
+  // Xử lý xóa thông báo riêng lẻ
+  const handleDeleteNotification = (notificationId) => {
+    Alert.alert(
+      'Xóa thông báo',
+      'Bạn có chắc chắn muốn xóa thông báo này?',
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel',
+        },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: () => clearNotification(notificationId),
+        },
+      ]
+    );
+  };
+
   // Xử lý đánh dấu tất cả đã đọc
   const handleMarkAllAsRead = () => {
     if (unreadCount === 0) {
@@ -200,7 +245,32 @@ const NotificationScreen = () => {
     );
   };
 
-  // Component hiển thị khi không có thông báo
+  // Xử lý xóa tất cả thông báo
+  const handleClearAllNotifications = () => {
+    if (notifications.length === 0) {
+      Alert.alert('Thông báo', 'Không có thông báo nào để xóa.');
+      return;
+    }
+
+    Alert.alert(
+      'Xóa tất cả thông báo',
+      'Bạn có chắc chắn muốn xóa tất cả thông báo?',
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel',
+        },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: clearAllNotifications,
+        },
+      ]
+    );
+  };
+
+  // ==================== RENDER FUNCTIONS ====================
+
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
       <Ionicons name="notifications-outline" size={64} color={theme.placeholder} />
@@ -213,21 +283,33 @@ const NotificationScreen = () => {
     </View>
   );
 
+  // ==================== MAIN RENDER ====================
+
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      {/* Header với nút đánh dấu tất cả đã đọc */}
+      {/* Header với các nút action */}
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
         <Text style={[styles.headerTitle, { color: theme.text }]}>
           Thông báo {unreadCount > 0 && `(${unreadCount})`}
         </Text>
-        {unreadCount > 0 && (
-          <TouchableOpacity
-            style={[styles.markAllButton, { backgroundColor: theme.primary }]}
-            onPress={handleMarkAllAsRead}
-          >
-            <Text style={styles.markAllButtonText}>Đánh dấu tất cả</Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.headerActions}>
+          {unreadCount > 0 && (
+            <TouchableOpacity
+              style={[styles.markAllButton, { backgroundColor: theme.primary }]}
+              onPress={handleMarkAllAsRead}
+            >
+              <Text style={styles.markAllButtonText}>Đánh dấu tất cả</Text>
+            </TouchableOpacity>
+          )}
+          {notifications.length > 0 && (
+            <TouchableOpacity
+              style={[styles.clearAllButton, { backgroundColor: '#e74c3c', marginLeft: 8 }]}
+              onPress={handleClearAllNotifications}
+            >
+              <Ionicons name="trash-outline" size={16} color="white" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Danh sách thông báo */}
@@ -244,6 +326,7 @@ const NotificationScreen = () => {
               notification={item}
               onPress={handleNotificationPress}
               onMarkAsRead={handleMarkAsRead}
+              onDelete={handleDeleteNotification}
               theme={theme}
             />
           )}
@@ -263,6 +346,8 @@ const NotificationScreen = () => {
   );
 };
 
+// ==================== STYLES ====================
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -279,6 +364,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   markAllButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -288,6 +377,13 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  clearAllButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   loadingContainer: {
     flex: 1,
@@ -322,8 +418,16 @@ const styles = StyleSheet.create({
   notificationTime: {
     fontSize: 12,
   },
+  notificationActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   markReadButton: {
     padding: 8,
+  },
+  deleteButton: {
+    padding: 8,
+    marginLeft: 4,
   },
   unreadDot: {
     width: 8,
