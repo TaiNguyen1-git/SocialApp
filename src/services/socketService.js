@@ -9,7 +9,7 @@ class SocketService {
 
     // Cấu hình server - Tự động thử kết nối nhiều URL
     this.serverUrls = [
-      'http://192.168.0.104:3001',   // Điện thoại thật (IP thực tế)
+      'http://192.168.0.102:3001',   // Điện thoại thật (IP thực tế)
       'http://10.0.2.2:3001',        // Android Emulator
       'http://localhost:3001'        // iOS Simulator/localhost
     ];
@@ -145,6 +145,12 @@ class SocketService {
     // Lắng nghe lịch sử tin nhắn
     this.socket.on('message_history', (data) => {
       this.emit('message_history', data);
+    });
+
+    // Lắng nghe notification mới
+    this.socket.on('new_notification', (data) => {
+      console.log('Nhận notification mới:', data);
+      this.emit('new_notification', data);
     });
   }
 
@@ -318,6 +324,35 @@ class SocketService {
    */
   getCurrentUser() {
     return this.currentUser;
+  }
+
+  /**
+   * Gửi notification real-time
+   * @param {string} receiverId - ID người nhận
+   * @param {string} type - Loại notification (like, comment, reply)
+   * @param {string} message - Nội dung notification
+   * @param {Object} notificationData - Dữ liệu bổ sung
+   */
+  sendNotification(receiverId, type, message, notificationData = {}) {
+    if (!this.socket || !this.isConnected) {
+      console.error('Socket chưa được kết nối');
+      return false;
+    }
+
+    const notificationPayload = {
+      receiverId,
+      type,
+      message,
+      notificationData,
+      senderInfo: {
+        id: this.currentUser.id,
+        name: this.currentUser.displayName || this.currentUser.username,
+        avatar: this.currentUser.avatar || null
+      }
+    };
+
+    this.socket.emit('send_notification', notificationPayload);
+    return true;
   }
 
   /**

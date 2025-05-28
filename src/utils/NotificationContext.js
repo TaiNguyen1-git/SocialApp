@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as LocalStorage from '../services/localStorage';
 import { useAuth } from './AuthContext';
+import socketService from '../services/socketService';
+import { useNavigation } from '@react-navigation/native';
 
 // Tạo context cho notifications
 const NotificationContext = createContext();
@@ -19,16 +21,21 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       loadNotifications();
+      setupSocketListeners();
 
-      // Set up interval để check notifications mới mỗi 5 giây
+      // Set up interval để check notifications mới mỗi 30 giây (giảm tần suất vì có real-time)
       const interval = setInterval(() => {
         loadNotifications();
-      }, 5000);
+      }, 30000);
 
-      return () => clearInterval(interval);
+      return () => {
+        clearInterval(interval);
+        cleanupSocketListeners();
+      };
     } else {
       setNotifications([]);
       setUnreadCount(0);
+      cleanupSocketListeners();
     }
   }, [user]);
 
@@ -149,6 +156,82 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
+  // ==================== SOCKET NOTIFICATION FUNCTIONS ====================
+
+  /**
+   * Thiết lập socket listeners cho notifications
+   */
+  const setupSocketListeners = () => {
+    // Lắng nghe notification mới từ socket
+    socketService.on('new_notification', handleNewNotification);
+  };
+
+  /**
+   * Dọn dẹp socket listeners
+   */
+  const cleanupSocketListeners = () => {
+    socketService.off('new_notification', handleNewNotification);
+  };
+
+  /**
+   * Xử lý notification mới từ socket
+   * @param {Object} notificationData - Dữ liệu notification từ socket
+   */
+  const handleNewNotification = async (notificationData) => {
+    try {
+      console.log('Nhận notification real-time:', notificationData);
+
+      // Lưu notification vào local storage
+      await LocalStorage.addNotification(
+        user.id,
+        notificationData.type,
+        notificationData.message,
+        notificationData.data
+      );
+
+      // Cập nhật state ngay lập tức
+      await loadNotifications();
+
+      // Hiển thị notification trực tiếp
+      console.log(`🔔 ${notificationData.message}`);
+
+      // TODO: Có thể thêm toast notification hoặc push notification ở đây
+      // Alert.alert('Thông báo mới', notificationData.message);
+
+    } catch (error) {
+      console.error('Lỗi khi xử lý notification real-time:', error);
+    }
+  };
+
+  /**
+   * Navigate trực tiếp đến chi tiết notification
+   * @param {Object} notification - Notification object
+   */
+  const navigateToNotification = async (notification) => {
+    try {
+      // Đánh dấu đã đọc
+      await markAsRead(notification.id);
+
+      // Navigate dựa trên loại notification
+      if (notification.type === 'message') {
+        // Xử lý thông báo chat - đã có trong NotificationScreen
+        return;
+      } else if (notification.data?.postId) {
+        // Navigate đến PostDetailScreen
+        const LocalStorage = require('../services/localStorage');
+        const posts = await LocalStorage.getPosts();
+        const post = posts.find(p => p.id === notification.data.postId);
+
+        if (post) {
+          // TODO: Implement navigation to PostDetailScreen
+          console.log('Navigate to post:', post.id);
+        }
+      }
+    } catch (error) {
+      console.error('Lỗi khi navigate notification:', error);
+    }
+  };
+
   /**
    * Thêm thông báo mới (được gọi từ các action khác)
    * @param {string} userId - ID người nhận
@@ -179,7 +262,8 @@ export const NotificationProvider = ({ children }) => {
     clearNotification,
     clearAllNotifications,
     refreshNotifications,
-    addNotification
+    addNotification,
+    navigateToNotification
   };
 
   return (

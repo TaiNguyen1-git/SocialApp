@@ -161,6 +161,26 @@ io.on('connection', (socket) => {
     });
   });
 
+  // ==================== NOTIFICATION FUNCTIONS ====================
+
+  // Xử lý gửi notification real-time
+  socket.on('send_notification', (data) => {
+    const { receiverId, type, message, notificationData, senderInfo } = data;
+
+    console.log(`Sending notification to ${receiverId}: ${message}`);
+
+    // Gửi notification cho người nhận
+    io.to(receiverId).emit('new_notification', {
+      id: Date.now().toString(),
+      type,
+      message,
+      data: notificationData,
+      senderInfo,
+      isRead: false,
+      createdAt: new Date().toISOString()
+    });
+  });
+
   // Xử lý disconnect
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
@@ -296,7 +316,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('='.repeat(50));
   console.log('💡 Để test trên thiết bị thật:');
   console.log(`   Cập nhật serverUrl trong socketService.js thành: http://${localIP}:${PORT}`);
-  console.log('💡 IP hiện tại đã được cấu hình: http://192.168.0.102:3001');
+  console.log(`💡 IP hiện tại đã được cấu hình: http://${localIP}:${PORT}`);
   console.log('='.repeat(50));
 });
 

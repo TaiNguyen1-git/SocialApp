@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import socketService from './socketService';
 
 // ==================== STORAGE KEYS ====================
 const USERS_KEY = '@SocialApp:users';
@@ -264,12 +265,25 @@ export const likePost = async (postId, userId) => {
 
     // Tạo thông báo cho chủ bài đăng (nếu không phải chính họ like)
     if (post && post.userId !== userId && user && !post.likes.includes(userId)) {
+      const notificationMessage = `${user.displayName} đã thích bài đăng của bạn`;
+
+      // Lưu notification vào local storage
       await addNotification(
         post.userId,
         'like',
-        `${user.displayName} đã thích bài đăng của bạn`,
+        notificationMessage,
         { postId }
       );
+
+      // Gửi notification real-time qua socket
+      if (socketService.isSocketConnected()) {
+        socketService.sendNotification(
+          post.userId,
+          'like',
+          notificationMessage,
+          { postId }
+        );
+      }
     }
   } catch (error) {
     throw error;
@@ -369,12 +383,25 @@ export const addComment = async (postId, userId, displayName, text, parentCommen
 
       if (parentComment && parentComment.userId !== userId) {
         console.log('Creating reply notification for user:', parentComment.userId);
+        const notificationMessage = `${displayName} đã trả lời bình luận của bạn`;
+
+        // Lưu notification vào local storage
         await addNotification(
           parentComment.userId,
           'reply',
-          `${displayName} đã trả lời bình luận của bạn`,
+          notificationMessage,
           { postId, commentId: parentCommentId, replyId: newComment.id }
         );
+
+        // Gửi notification real-time qua socket
+        if (socketService.isSocketConnected()) {
+          socketService.sendNotification(
+            parentComment.userId,
+            'reply',
+            notificationMessage,
+            { postId, commentId: parentCommentId, replyId: newComment.id }
+          );
+        }
       } else {
         console.log('Not creating notification - same user or comment not found');
       }
@@ -383,12 +410,25 @@ export const addComment = async (postId, userId, displayName, text, parentCommen
       const originalPost = posts.find(p => p.id === postId);
       if (originalPost && originalPost.userId !== userId) {
         console.log('Creating comment notification for post owner:', originalPost.userId);
+        const notificationMessage = `${displayName} đã bình luận về bài đăng của bạn`;
+
+        // Lưu notification vào local storage
         await addNotification(
           originalPost.userId,
           'comment',
-          `${displayName} đã bình luận về bài đăng của bạn`,
+          notificationMessage,
           { postId, commentId: newComment.id }
         );
+
+        // Gửi notification real-time qua socket
+        if (socketService.isSocketConnected()) {
+          socketService.sendNotification(
+            originalPost.userId,
+            'comment',
+            notificationMessage,
+            { postId, commentId: newComment.id }
+          );
+        }
       }
     }
   } catch (error) {
